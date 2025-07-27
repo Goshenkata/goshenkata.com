@@ -1,0 +1,32 @@
+.terraform/
+.terraform.lock.hcl
+
+# Terraform state files (can contain secrets)
+*.tfstate
+*.tfstate.*
+
+# Crash log (rarely created, but huge and not useful in git)
+crash.log
+
+# Terraform plan output (usually temporary)
+*.tfplan
+
+# Override files you might use locally
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# terraform variable files with secrets
+*.auto.tfvars
+*.auto.tfvars.json
+*.tfvars
+*.tfvars.json
+
+# Backup files created by Terraform
+*.bak
+*.backup
+
+# CLI config
+.terraformrc
+terraform.rc
