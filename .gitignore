@@ -29,3 +29,5 @@ override.tf.json
 # CLI config
 .terraformrc
 terraform.rc
+
+.aws-sam/
