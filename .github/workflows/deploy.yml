@@ -37,3 +37,11 @@ jobs:
 
     - name: Deploy frontend to S3
       run: aws s3 sync ./frontend s3://goshenkata-frontend --delete
+
+    - name: Deploy backend using SAM
+    - uses: aws-actions/setup-sam@v2
+        with:
+          use-installer: true
+          token: ${{ secrets.GITHUB_TOKEN }}
+    - run: sam build --use-container
+    - run: sam deploy --no-confirm-changeset --no-fail-on-empty-changeset
