@@ -1,8 +1,10 @@
 name: Deploy frontend + terraform
 
 on:
-  release:
-    types: [released]
+  workflow_dispatch:
+  push:
+    branches:
+      - main
 
 jobs:
   deploy:
