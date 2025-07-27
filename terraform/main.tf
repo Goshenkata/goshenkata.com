@@ -28,6 +28,7 @@ module "frontend_bucket" {
     error_document = "index.html"
   }
 
+  force_destroy = true
   attach_policy = true
   policy = jsonencode({
     Version = "2012-10-17",
