@@ -51,6 +51,11 @@ jobs:
       working-directory: terraform
       run: terraform init
 
+    - name: Empty S3 Buckets
+      run: |
+        echo "🧹 Emptying S3 buckets..."
+        aws s3 rm s3://goshenkata-frontend --recursive --quiet 2>/dev/null || echo "Frontend bucket already empty or doesn't exist"
+
     - name: Terraform Destroy
       working-directory: terraform
       run: |
