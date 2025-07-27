@@ -43,5 +43,6 @@ jobs:
       with:
         use-installer: true
         token: ${{ secrets.GITHUB_TOKEN }}
+    - run: cd backend
     - run: sam build --use-container
     - run: sam deploy --no-confirm-changeset --no-fail-on-empty-changeset
