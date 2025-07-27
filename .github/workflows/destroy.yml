@@ -1,0 +1,63 @@
+name: Destroy Infrastructure
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm_destroy:
+        description: 'Type "destroy" to confirm infrastructure destruction'
+        required: true
+        type: string
+
+jobs:
+  destroy:
+    runs-on: ubuntu-latest
+    
+    env:
+      AWS_REGION: eu-central-1
+
+    steps:
+    - name: Validate confirmation
+      if: ${{ github.event.inputs.confirm_destroy != 'destroy' }}
+      run: |
+        echo "❌ Destruction not confirmed. You must type 'destroy' to proceed."
+        exit 1
+
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ env.AWS_REGION }}
+
+    - name: Setup SAM CLI
+      uses: aws-actions/setup-sam@v2
+      with:
+        use-installer: true
+        token: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Delete SAM Stack
+      working-directory: backend
+      run: |
+        echo "🔥 Deleting SAM stack..."
+        sam delete --no-prompts --stack-name goshenkata-backend || echo "SAM stack not found or already deleted"
+
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v3
+
+    - name: Terraform Init
+      working-directory: terraform
+      run: terraform init
+
+    - name: Terraform Destroy
+      working-directory: terraform
+      run: |
+        echo "🔥 Destroying Terraform infrastructure..."
+        terraform destroy -auto-approve
+
+    - name: Destruction Complete
+      run: |
+        echo "✅ Infrastructure destruction completed successfully!"
+        echo "All AWS resources have been removed."
