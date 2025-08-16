@@ -1,0 +1,27 @@
+/* Site styles for Goshenkata */
+body {
+  background:
+    linear-gradient(rgba(0,0,0,.6), rgba(0,0,0,.6)) center / cover no-repeat fixed,
+    url('media/img/background.jpg') right center / cover no-repeat fixed;
+  background-color: #000; /* fallback */
+}
+
+.flicker {
+  animation: flicker 2.5s infinite;
+}
+
+@keyframes flicker {
+  0%, 18%, 22%, 25%, 53%, 57%, 100% {
+    opacity: 1;
+    text-shadow:
+      0 0 4px rgba(255,255,255,0.2),
+      0 0 11px rgba(255,255,255,0.1),
+      0 0 19px rgba(255,255,255,0.05),
+      0 0 40px rgba(13,110,253,0.15),
+      0 0 80px rgba(13,110,253,0.10);
+  }
+  20%, 24%, 55% {
+    opacity: .6;
+    text-shadow: none;
+  }
+}
