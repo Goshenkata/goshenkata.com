@@ -68,6 +68,20 @@ resource "aws_vpc_security_group_ingress_rule" "ssh" {
   }
 }
 
+# Security group ingress rule for HTTPS traffic
+resource "aws_vpc_security_group_ingress_rule" "https" {
+  security_group_id = aws_security_group.web_sg.id
+  description       = "HTTPS"
+  from_port         = 443
+  to_port           = 443
+  ip_protocol       = "tcp"
+  cidr_ipv4         = "0.0.0.0/0"
+
+  tags = {
+    Name = "${var.project_name}-https-ingress"
+  }
+}
+
 # Security group egress rule for all outbound traffic
 resource "aws_vpc_security_group_egress_rule" "all_outbound" {
   security_group_id = aws_security_group.web_sg.id
@@ -84,46 +98,70 @@ resource "aws_vpc_security_group_egress_rule" "all_outbound" {
 locals {
   user_data = <<-EOF
     #!/bin/bash
+    echo "=== Starting EC2 User Data Script ==="
+    
+    echo "=== Updating system packages ==="
     dnf update -y
     
-    dnf install -y nodejs npm git nginx
+    echo "=== Installing nodejs, npm, git, nginx, openssl ==="
+    dnf install -y nodejs npm git nginx openssl
     
-    # Clone the repository
+    echo "=== Cloning repository ==="
     cd /home/ec2-user
     git clone ${var.github_repo_url}
     cd goshenkata.com/${var.app_directory}
     
-    # Install dependencies and start the app
+    echo "=== Installing npm dependencies ==="
     npm install
     
-    # Run the Node.js app in the background on port 3000
+    echo "=== Starting Node.js application in background ==="
     nohup npm start > /home/ec2-user/app.log 2>&1 &
+    echo "Node.js app started with PID: $!"
     
-    # Configure nginx as reverse proxy
+    echo "=== Generating self-signed SSL certificate ==="
+    mkdir -p /etc/nginx/ssl
+    openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
+      -keyout /etc/nginx/ssl/nginx.key \
+      -out /etc/nginx/ssl/nginx.crt \
+      -subj "/C=Bulgaria/ST=Sofia/L=Sofia/O=Goshenkata/CN=localhost"
+    echo "SSL certificate generated"
+    
+    echo "=== Configuring nginx with SSL ==="
     echo "server {
         listen ${var.http_port};
+        listen 443 ssl;
         server_name _;
+        
+        ssl_certificate /etc/nginx/ssl/nginx.crt;
+        ssl_certificate_key /etc/nginx/ssl/nginx.key;
+        ssl_protocols TLSv1.2 TLSv1.3;
+        ssl_ciphers HIGH:!aNULL:!MD5;
         
         location / {
             proxy_pass http://localhost:${var.app_port};
-            proxy_http_version 1.1;
-            proxy_set_header Upgrade \$http_upgrade;
-            proxy_set_header Connection 'upgrade';
             proxy_set_header Host \$host;
             proxy_set_header X-Real-IP \$remote_addr;
             proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
             proxy_set_header X-Forwarded-Proto \$scheme;
-            proxy_cache_bypass \$http_upgrade;
         }
     }" > /etc/nginx/conf.d/nodeapp.conf
+    echo "Nginx configuration written"
     
-    # Remove default nginx config and start nginx
+    echo "=== Removing default nginx config ==="
     rm -f /etc/nginx/conf.d/default.conf
+    
+    echo "=== Starting nginx service ==="
     systemctl enable nginx
     systemctl start nginx
+    echo "Nginx service status: $(systemctl is-active nginx)"
     
-    # Make sure ec2-user owns the files
+    echo "=== Setting file permissions ==="
     chown -R ec2-user:ec2-user /home/ec2-user/goshenkata.com
+    
+    echo "=== Setup complete! ==="
+    echo "HTTP: http://$(curl -s http://169.254.169.254/latest/meta-data/public-ipv4)"
+    echo "HTTPS: https://$(curl -s http://169.254.169.254/latest/meta-data/public-ipv4)"
+    echo "Node.js logs: tail -f /home/ec2-user/app.log"
   EOF
 }
 
@@ -156,12 +194,22 @@ data "aws_ami" "amazon_linux" {
 
   filter {
     name   = "name"
-    values = ["al2023-ami-*-x86_64"]
+    values = ["al2023-ami-2023*"]
+  }
+
+  filter {
+    name   = "architecture"
+    values = ["x86_64"]
   }
 
   filter {
     name   = "virtualization-type"
     values = ["hvm"]
+  }
+
+  filter {
+    name   = "usage-operation"
+    values = ["RunInstances"]
   }
 }
 

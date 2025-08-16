@@ -39,3 +39,16 @@ variable "app_directory" {
   type        = string
   default     = "frontend"
 }
+
+
+variable "domain_name" {
+  description = "Domain name for SSL certificate (leave null to disable HTTPS)"
+  type        = string
+  default     = "goshenkata.com"
+}
+
+variable "email" {
+  description = "Email address for Let's Encrypt notifications"
+  type        = string
+  default     = "goshenkataklev@gmail.com"
+}
