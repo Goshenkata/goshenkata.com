@@ -94,11 +94,17 @@ resource "aws_vpc_security_group_egress_rule" "all_outbound" {
   }
 }
 
+# Get the latest git commit hash
+data "external" "git_commit" {
+  program = ["sh", "-c", "cd .. && git rev-parse HEAD | cut -c1-8 | jq -R '{commit: .}'"]
+}
+
 # User data script to setup Node.js, nginx and run the app
 locals {
   user_data = <<-EOF
     #!/bin/bash
     echo "=== Starting EC2 User Data Script ==="
+    echo "=== Deployment timestamp: ${timestamp()} ==="
     
     echo "=== Updating system packages ==="
     dnf update -y
@@ -179,7 +185,8 @@ module "ec2_instance" {
   subnet_id                   = data.aws_subnets.default.ids[0]
   associate_public_ip_address = true
 
-  user_data_base64 = base64encode(local.user_data)
+  user_data_base64            = base64encode(local.user_data)
+  user_data_replace_on_change = true  # This forces recreation when user_data changes
 
   tags = {
     Name = "${var.project_name}-web-server"
