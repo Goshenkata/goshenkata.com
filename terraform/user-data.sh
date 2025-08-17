@@ -53,8 +53,8 @@ done
 
 cat > /etc/nginx/conf.d/nodeapp.conf << 'NGINX_CONFIG'
 server {
-    listen 443 ssl default_server;
-    listen 80 default_server;
+    listen 443 ssl;
+    listen 80;
     server_name ${domain_name} www.${domain_name};
     
     # Access logging
@@ -105,9 +105,6 @@ rm -f /tmp/ipv4_ranges.txt /tmp/ipv6_ranges.txt
 
 echo "=== Removing default nginx config ==="
 rm -f /etc/nginx/conf.d/default.conf
-
-echo "=== Disabling default server block ==="
-sed -i '/server {/,/^}/s/^/#/' /etc/nginx/nginx.conf
 
 echo "=== Testing nginx configuration ==="
 nginx -t
