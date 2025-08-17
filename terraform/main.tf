@@ -187,16 +187,9 @@ provider "cloudflare" {
   # API token will be provided via CLOUDFLARE_API_TOKEN environment variable
 }
 
-# Get the Cloudflare zone for the domain
-data "cloudflare_zones" "domain" {
-  filter {
-    name = var.domain_name
-  }
-}
-
 # Create A record for the root domain
 resource "cloudflare_record" "root" {
-  zone_id = data.cloudflare_zones.domain.zones[0].id
+  zone_id = var.cloudflare_zone_id
   name    = "@"
   content = module.ec2_instance.public_ip
   type    = "A"
@@ -209,7 +202,7 @@ resource "cloudflare_record" "root" {
 
 # Create A record for www subdomain
 resource "cloudflare_record" "www" {
-  zone_id = data.cloudflare_zones.domain.zones[0].id
+  zone_id = var.cloudflare_zone_id
   name    = "www"
   content = module.ec2_instance.public_ip
   type    = "A"
