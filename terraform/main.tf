@@ -188,7 +188,7 @@ provider "cloudflare" {
 }
 
 # Create A record for the root domain
-resource "cloudflare_record" "root" {
+resource "cloudflare_dns_record" "root" {
   zone_id = var.cloudflare_zone_id
   name    = "@"
   content = module.ec2_instance.public_ip
@@ -201,7 +201,7 @@ resource "cloudflare_record" "root" {
 }
 
 # Create A record for www subdomain
-resource "cloudflare_record" "www" {
+resource "cloudflare_dns_record" "www" {
   zone_id = var.cloudflare_zone_id
   name    = "www"
   content = module.ec2_instance.public_ip

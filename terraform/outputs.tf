@@ -17,14 +17,14 @@ output "cloudflare_records" {
   description = "Cloudflare DNS records created"
   value = {
     root_domain = {
-      name    = cloudflare_record.root.name
-      content = cloudflare_record.root.content
-      proxied = cloudflare_record.root.proxied
+      name    = cloudflare_dns_record.root.name
+      content = cloudflare_dns_record.root.content
+      proxied = cloudflare_dns_record.root.proxied
     }
     www_domain = {
-      name    = cloudflare_record.www.name
-      content = cloudflare_record.www.content
-      proxied = cloudflare_record.www.proxied
+      name    = cloudflare_dns_record.www.name
+      content = cloudflare_dns_record.www.content
+      proxied = cloudflare_dns_record.www.proxied
     }
   }
 }
