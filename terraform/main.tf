@@ -197,14 +197,3 @@ resource "cloudflare_dns_record" "root" {
   proxied = true
   comment = "Managed by Terraform - Points to EC2 instance"
 }
-
-# Create CNAME record for www subdomain
-resource "cloudflare_dns_record" "www" {
-  zone_id = var.cloudflare_zone_id
-  name    = "www"
-  content = var.domain_name
-  type    = "CNAME"
-  ttl     = 1
-  proxied = true
-  comment = "Managed by Terraform - WWW subdomain points to root domain"
-}

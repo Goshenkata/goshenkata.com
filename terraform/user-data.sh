@@ -102,13 +102,6 @@ cat >> /etc/nginx/conf.d/nodeapp.conf << 'NGINX_CONFIG'
         add_header X-Debug-Server "nginx-ec2" always;
         add_header X-Debug-Upstream "nodejs-${app_port}" always;
     }
-    
-    # Health check endpoint
-    location /health {
-        access_log off;
-        return 200 "OK - Nginx is running\n";
-        add_header Content-Type text/plain;
-    }
 }
 NGINX_CONFIG
 echo "Nginx configuration written"
