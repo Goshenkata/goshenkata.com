@@ -21,10 +21,5 @@ output "cloudflare_records" {
       content = cloudflare_dns_record.root.content
       proxied = cloudflare_dns_record.root.proxied
     }
-    www_domain = {
-      name    = cloudflare_dns_record.www.name
-      content = cloudflare_dns_record.www.content
-      proxied = cloudflare_dns_record.www.proxied
-    }
   }
 }

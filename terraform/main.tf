@@ -184,4 +184,3 @@ resource "cloudflare_dns_record" "root" {
   comment = "Managed by Terraform - Points to EC2 instance"
 }
 
-
