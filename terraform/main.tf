@@ -182,8 +182,6 @@ resource "cloudflare_dns_record" "root" {
   ttl     = 1
   proxied = true
   comment = "Managed by Terraform - Points to EC2 instance"
-
-  tags = ["terraform", "ec2"]
 }
 
 # Create A record for www subdomain
@@ -195,7 +193,5 @@ resource "cloudflare_dns_record" "www" {
   ttl     = 1
   proxied = true
   comment = "Managed by Terraform - Points to EC2 instance"
-
-  tags = ["terraform", "ec2"]
 }
 
