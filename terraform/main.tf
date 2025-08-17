@@ -40,20 +40,6 @@ resource "aws_security_group" "web_sg" {
   }
 }
 
-# Security group ingress rule for HTTP traffic
-resource "aws_vpc_security_group_ingress_rule" "http" {
-  security_group_id = aws_security_group.web_sg.id
-  description       = "HTTP"
-  from_port         = var.http_port
-  to_port           = var.http_port
-  ip_protocol       = "tcp"
-  cidr_ipv4         = "0.0.0.0/0"
-
-  tags = {
-    Name = "${var.project_name}-http-ingress"
-  }
-}
-
 # Security group ingress rule for SSH traffic
 resource "aws_vpc_security_group_ingress_rule" "ssh" {
   security_group_id = aws_security_group.web_sg.id

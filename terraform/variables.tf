@@ -16,12 +16,6 @@ variable "instance_type" {
   default     = "t2.micro"
 }
 
-variable "http_port" {
-  description = "HTTP port for web traffic"
-  type        = number
-  default     = 80
-}
-
 variable "app_port" {
   description = "Port where Node.js app runs internally"
   type        = number
