@@ -37,21 +37,23 @@ echo "=== Configuring nginx for Cloudflare Full encryption ==="
 
 # Generate real_ip directives for IPv4 ranges
 IPV4_REAL_IP=""
+IFS=$'\n'
 for ip in ${cloudflare_ipv4_ranges}; do
-    if [ ! -z "$ip" ]; then
-        IPV4_REAL_IP="$IPV4_REAL_IP    set_real_ip_from $ip;\n"
+    if [ ! -z "$ip" ] && [ "$ip" != "" ]; then
+        IPV4_REAL_IP="$IPV4_REAL_IP    set_real_ip_from $ip;"$'\n'
     fi
 done
 
 # Generate real_ip directives for IPv6 ranges  
 IPV6_REAL_IP=""
 for ip in ${cloudflare_ipv6_ranges}; do
-    if [ ! -z "$ip" ]; then
-        IPV6_REAL_IP="$IPV6_REAL_IP    set_real_ip_from $ip;\n"
+    if [ ! -z "$ip" ] && [ "$ip" != "" ]; then
+        IPV6_REAL_IP="$IPV6_REAL_IP    set_real_ip_from $ip;"$'\n'
     fi
 done
+unset IFS
 
-cat > /etc/nginx/conf.d/nodeapp.conf << NGINX_CONFIG
+cat > /etc/nginx/conf.d/nodeapp.conf << 'NGINX_CONFIG'
 server {
     listen 443 ssl default_server;
     server_name ${domain_name} www.${domain_name};
@@ -66,15 +68,23 @@ server {
     # Restore real visitor IP from Cloudflare headers
     real_ip_header CF-Connecting-IP;
     # IPv4 ranges
-$(echo -e "$IPV4_REAL_IP")    # IPv6 ranges
-$(echo -e "$IPV6_REAL_IP")    
+NGINX_CONFIG
+
+# Append the dynamic IP ranges
+echo "$IPV4_REAL_IP" >> /etc/nginx/conf.d/nodeapp.conf
+echo "    # IPv6 ranges" >> /etc/nginx/conf.d/nodeapp.conf
+echo "$IPV6_REAL_IP" >> /etc/nginx/conf.d/nodeapp.conf
+
+# Append the rest of the configuration
+cat >> /etc/nginx/conf.d/nodeapp.conf << 'NGINX_CONFIG'
+    
     location / {
         proxy_pass http://localhost:${app_port};
-        proxy_set_header Host \$host;
-        proxy_set_header X-Real-IP \$remote_addr;
-        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto \$scheme;
-        proxy_set_header X-Forwarded-Host \$host;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Forwarded-Host $host;
     }
 }
 NGINX_CONFIG

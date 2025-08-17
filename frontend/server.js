@@ -4,6 +4,13 @@ const path = require('path');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Request logging middleware
+app.use((req, res, next) => {
+  const ip = req.get('X-Real-IP') || req.get('X-Forwarded-For') || req.ip || req.connection.remoteAddress;
+  console.log(`${req.method} ${req.url} from ${ip}`);
+  next();
+});
+
 // Serve static files from the static directory
 app.use(express.static(path.join(__dirname, 'static')));
 

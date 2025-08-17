@@ -14,6 +14,10 @@ terraform {
       source  = "hashicorp/http"
       version = "~> 3.0"
     }
+    cloudflare = {
+      source  = "cloudflare/cloudflare"
+      version = "~> 5"
+    }
   }
 }
 
@@ -176,5 +180,41 @@ data "aws_ami" "amazon_linux" {
     name   = "usage-operation"
     values = ["RunInstances"]
   }
+}
+
+# Cloudflare provider configuration
+provider "cloudflare" {
+  # API token will be provided via CLOUDFLARE_API_TOKEN environment variable
+}
+
+# Get the Cloudflare zone for the domain
+data "cloudflare_zone" "domain" {
+  name = var.domain_name
+}
+
+# Create A record for the root domain
+resource "cloudflare_record" "root" {
+  zone_id = data.cloudflare_zone.domain.id
+  name    = "@"
+  content = module.ec2_instance.public_ip
+  type    = "A"
+  ttl     = 300
+  proxied = true
+  comment = "Managed by Terraform - Points to EC2 instance"
+
+  tags = ["terraform", "ec2"]
+}
+
+# Create A record for www subdomain
+resource "cloudflare_record" "www" {
+  zone_id = data.cloudflare_zone.domain.id
+  name    = "www"
+  content = module.ec2_instance.public_ip
+  type    = "A"
+  ttl     = 300
+  proxied = true
+  comment = "Managed by Terraform - Points to EC2 instance"
+
+  tags = ["terraform", "ec2"]
 }
 

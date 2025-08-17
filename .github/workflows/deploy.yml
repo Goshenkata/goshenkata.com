@@ -37,7 +37,9 @@ jobs:
 
     - name: Terraform Apply
       working-directory: terraform
-      run: terraform apply -auto-approve -var="deployment_id=${{ steps.git-hash.outputs.hash }}"
+      env:
+        CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      run: terraform apply -auto-approve -var="deployment_id=${{ steps.git-hash.outputs.hash }}" -var="cloudflare_api_token=${{ secrets.CLOUDFLARE_API_TOKEN }}"
 
     - name: Deploy backend using SAM
       uses: aws-actions/setup-sam@v2
