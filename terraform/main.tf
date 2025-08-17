@@ -179,7 +179,7 @@ resource "cloudflare_dns_record" "root" {
   name    = "@"
   content = module.ec2_instance.public_ip
   type    = "A"
-  ttl     = 300
+  ttl     = 1
   proxied = true
   comment = "Managed by Terraform - Points to EC2 instance"
 
@@ -192,7 +192,7 @@ resource "cloudflare_dns_record" "www" {
   name    = "www"
   content = module.ec2_instance.public_ip
   type    = "A"
-  ttl     = 300
+  ttl     = 1
   proxied = true
   comment = "Managed by Terraform - Points to EC2 instance"
 
