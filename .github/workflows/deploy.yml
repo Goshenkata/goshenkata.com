@@ -31,9 +31,13 @@ jobs:
       working-directory: terraform
       run: terraform init
 
+    - name: Get Git Commit Hash
+      id: git-hash
+      run: echo "hash=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+
     - name: Terraform Apply
       working-directory: terraform
-      run: terraform apply -auto-approve
+      run: terraform apply -auto-approve -var="deployment_id=${{ steps.git-hash.outputs.hash }}"
 
     - name: Deploy backend using SAM
       uses: aws-actions/setup-sam@v2

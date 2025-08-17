@@ -96,13 +96,10 @@ resource "aws_vpc_security_group_egress_rule" "all_outbound" {
 
 # User data script to setup Node.js, nginx and run the app
 locals {
-  # Force recreation by using current timestamp
-  deployment_id = formatdate("YYYY-MM-DD-hhmm", timestamp())
-  
   user_data = <<-EOF
     #!/bin/bash
     echo "=== Starting EC2 User Data Script ==="
-    echo "=== Deployment ID: ${local.deployment_id} ==="
+    echo "=== Deployment ID: ${var.deployment_id} ==="
     
     echo "=== Updating system packages ==="
     dnf update -y
