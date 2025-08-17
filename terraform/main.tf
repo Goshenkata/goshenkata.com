@@ -48,6 +48,20 @@ resource "aws_security_group" "web_sg" {
   }
 }
 
+# Security group ingress rule for SSH traffic
+resource "aws_vpc_security_group_ingress_rule" "ssh" {
+  security_group_id = aws_security_group.web_sg.id
+  description       = "SSH"
+  from_port         = 22
+  to_port           = 22
+  ip_protocol       = "tcp"
+  cidr_ipv4         = "0.0.0.0/0"
+
+  tags = {
+    Name = "${var.project_name}-ssh-ingress"
+  }
+}
+
 # Fetch Cloudflare IP ranges from official endpoints
 data "http" "cloudflare_ipv4" {
   url = "https://www.cloudflare.com/ips-v4"
@@ -183,4 +197,3 @@ resource "cloudflare_dns_record" "root" {
   proxied = true
   comment = "Managed by Terraform - Points to EC2 instance"
 }
-
