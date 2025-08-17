@@ -124,8 +124,21 @@ locals {
     openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
       -keyout /etc/nginx/ssl/nginx.key \
       -out /etc/nginx/ssl/nginx.crt \
-      -subj "/C=Bulgaria/ST=Sofia/L=Sofia/O=Goshenkata/CN=localhost"
-    echo "SSL certificate generated"
+      -subj "/C=BG/ST=Sofia/L=Sofia/O=Goshenkata/CN=localhost"
+    
+    # Set proper permissions for SSL files
+    chmod 600 /etc/nginx/ssl/nginx.key
+    chmod 644 /etc/nginx/ssl/nginx.crt
+    chown root:root /etc/nginx/ssl/nginx.key /etc/nginx/ssl/nginx.crt
+    
+    # Verify SSL files exist
+    if [ -f "/etc/nginx/ssl/nginx.crt" ] && [ -f "/etc/nginx/ssl/nginx.key" ]; then
+        echo "SSL certificate generated successfully"
+        ls -la /etc/nginx/ssl/
+    else
+        echo "ERROR: SSL certificate generation failed"
+        exit 1
+    fi
     
     echo "=== Configuring nginx with SSL ==="
     echo "server {
@@ -151,17 +164,35 @@ locals {
     echo "=== Removing default nginx config ==="
     rm -f /etc/nginx/conf.d/default.conf
     
+    echo "=== Testing nginx configuration ==="
+    nginx -t
+    if [ $? -eq 0 ]; then
+        echo "Nginx configuration test passed"
+    else
+        echo "ERROR: Nginx configuration test failed"
+        cat /etc/nginx/conf.d/nodeapp.conf
+        exit 1
+    fi
+    
     echo "=== Starting nginx service ==="
     systemctl enable nginx
     systemctl start nginx
     echo "Nginx service status: $(systemctl is-active nginx)"
     
+    # Check if nginx started successfully
+    if [ "$(systemctl is-active nginx)" = "active" ]; then
+        echo "Nginx started successfully"
+    else
+        echo "ERROR: Nginx failed to start"
+        systemctl status nginx
+        journalctl -u nginx --no-pager
+        exit 1
+    fi
+    
     echo "=== Setting file permissions ==="
     chown -R ec2-user:ec2-user /home/ec2-user/goshenkata.com
     
     echo "=== Setup complete! ==="
-    echo "HTTP: http://$(curl -s http://169.254.169.254/latest/meta-data/public-ipv4)"
-    echo "HTTPS: https://$(curl -s http://169.254.169.254/latest/meta-data/public-ipv4)"
     echo "Node.js logs: tail -f /home/ec2-user/app.log"
   EOF
 }
