@@ -184,14 +184,4 @@ resource "cloudflare_dns_record" "root" {
   comment = "Managed by Terraform - Points to EC2 instance"
 }
 
-# Create A record for www subdomain
-resource "cloudflare_dns_record" "www" {
-  zone_id = var.cloudflare_zone_id
-  name    = "www"
-  content = module.ec2_instance.public_ip
-  type    = "A"
-  ttl     = 1
-  proxied = true
-  comment = "Managed by Terraform - Points to EC2 instance"
-}
 
