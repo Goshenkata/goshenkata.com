@@ -2,7 +2,7 @@
 body {
   background:
     linear-gradient(rgba(0,0,0,.6), rgba(0,0,0,.6)) center / cover no-repeat fixed,
-    url('media/img/background.jpg') right center / cover no-repeat fixed;
+    url('../img/background.jpg') right center / cover no-repeat fixed;
   background-color: #000; /* fallback */
 }
 
