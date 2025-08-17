@@ -56,7 +56,12 @@ unset IFS
 cat > /etc/nginx/conf.d/nodeapp.conf << 'NGINX_CONFIG'
 server {
     listen 443 ssl default_server;
+    listen 80 default_server;
     server_name ${domain_name} www.${domain_name};
+    
+    # Access logging
+    access_log /var/log/nginx/access.log combined;
+    error_log /var/log/nginx/error.log;
     
     # SSL Configuration for Cloudflare Full mode
     ssl_certificate /etc/nginx/ssl/nginx.crt;
@@ -78,6 +83,11 @@ echo "$IPV6_REAL_IP" >> /etc/nginx/conf.d/nodeapp.conf
 # Append the rest of the configuration
 cat >> /etc/nginx/conf.d/nodeapp.conf << 'NGINX_CONFIG'
     
+    # Redirect HTTP to HTTPS
+    if ($scheme != "https") {
+        return 301 https://$host$request_uri;
+    }
+    
     location / {
         proxy_pass http://localhost:${app_port};
         proxy_set_header Host $host;
@@ -85,6 +95,17 @@ cat >> /etc/nginx/conf.d/nodeapp.conf << 'NGINX_CONFIG'
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
         proxy_set_header X-Forwarded-Host $host;
+        
+        # Add some debugging headers
+        add_header X-Debug-Server "nginx-ec2" always;
+        add_header X-Debug-Upstream "nodejs-${app_port}" always;
+    }
+    
+    # Health check endpoint
+    location /health {
+        access_log off;
+        return 200 "OK - Nginx is running\n";
+        add_header Content-Type text/plain;
     }
 }
 NGINX_CONFIG
@@ -123,3 +144,19 @@ chown -R ec2-user:ec2-user /home/ec2-user/goshenkata.com
 
 echo "=== Setup complete! ==="
 echo "Node.js logs: tail -f /home/ec2-user/app.log"
+echo "Nginx access logs: tail -f /var/log/nginx/access.log"
+echo "Nginx error logs: tail -f /var/log/nginx/error.log"
+
+echo "=== Deployment Information ==="
+echo "EC2 Instance Public IP: $(curl -s http://169.254.169.254/latest/meta-data/public-ipv4)"
+echo "Domain configured: ${domain_name}"
+echo "App running on port: ${app_port}"
+echo "Test URLs:"
+echo "  - Health check: https://${domain_name}/health"
+echo "  - Main app: https://${domain_name}/"
+
+echo "=== Troubleshooting commands ==="
+echo "Check nginx status: systemctl status nginx"
+echo "Check app process: ps aux | grep node"
+echo "Test nginx config: nginx -t"
+echo "View nginx config: cat /etc/nginx/conf.d/nodeapp.conf"
