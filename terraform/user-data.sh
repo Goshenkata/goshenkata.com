@@ -51,7 +51,7 @@ echo "${cloudflare_ipv6_ranges}" | while IFS= read -r ip; do
     fi
 done
 
-cat > /etc/nginx/conf.d/nodeapp.conf << 'NGINX_CONFIG'
+cat > /etc/nginx/default.d/nodeapp.conf << 'NGINX_CONFIG'
 server {
     listen 443 ssl default_server;
     listen 80 default_server;
@@ -83,13 +83,7 @@ if [ -f /tmp/ipv6_ranges.txt ]; then
 fi
 
 # Append the rest of the configuration
-cat >> /etc/nginx/conf.d/nodeapp.conf << 'NGINX_CONFIG'
-    
-    # Redirect HTTP to HTTPS
-    if ($scheme != "https") {
-        return 301 https://$host$request_uri;
-    }
-    
+cat >> /etc/nginx/default.d/nodeapp.conf << 'NGINX_CONFIG'
     location / {
         proxy_pass http://localhost:${app_port};
         proxy_set_header Host $host;
@@ -110,7 +104,7 @@ echo "Nginx configuration written"
 rm -f /tmp/ipv4_ranges.txt /tmp/ipv6_ranges.txt
 
 echo "=== Removing default nginx config ==="
-rm -f /etc/nginx/conf.d/default.conf
+rm -f /etc/nginx/default.d/default.conf
 
 echo "=== Testing nginx configuration ==="
 nginx -t
@@ -118,7 +112,7 @@ if [ $? -eq 0 ]; then
     echo "Nginx configuration test passed"
 else
     echo "ERROR: Nginx configuration test failed"
-    cat /etc/nginx/conf.d/nodeapp.conf
+    cat /etc/nginx/default.d/nodeapp.conf
     exit 1
 fi
 
@@ -146,11 +140,9 @@ echo "Nginx access logs: tail -f /var/log/nginx/access.log"
 echo "Nginx error logs: tail -f /var/log/nginx/error.log"
 
 echo "=== Deployment Information ==="
-echo "EC2 Instance Public IP: $(curl -s http://169.254.169.254/latest/meta-data/public-ipv4)"
 echo "Domain configured: ${domain_name}"
 echo "App running on port: ${app_port}"
 echo "Test URLs:"
-echo "  - Health check: https://${domain_name}/health"
 echo "  - Main app: https://${domain_name}/"
 
 echo "=== Troubleshooting commands ==="
