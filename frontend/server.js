@@ -4,15 +4,15 @@ const path = require('path');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Serve static files from the current directory
-app.use(express.static(__dirname));
+// Serve static files from the static directory
+app.use(express.static(path.join(__dirname, 'static')));
 
 // Middleware to parse JSON bodies
 app.use(express.json());
 
 // Route for the homepage
 app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'static', 'html', 'index.html'));
+  res.sendFile(path.join(__dirname, 'html', 'index.html'));
 });
 
 // Error handler
