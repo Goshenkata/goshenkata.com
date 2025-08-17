@@ -94,17 +94,15 @@ resource "aws_vpc_security_group_egress_rule" "all_outbound" {
   }
 }
 
-# Get the latest git commit hash
-data "external" "git_commit" {
-  program = ["sh", "-c", "cd .. && git rev-parse HEAD | cut -c1-8 | jq -R '{commit: .}'"]
-}
-
 # User data script to setup Node.js, nginx and run the app
 locals {
+  # Force recreation by using current timestamp
+  deployment_id = formatdate("YYYY-MM-DD-hhmm", timestamp())
+  
   user_data = <<-EOF
     #!/bin/bash
     echo "=== Starting EC2 User Data Script ==="
-    echo "=== Deployment timestamp: ${timestamp()} ==="
+    echo "=== Deployment ID: ${local.deployment_id} ==="
     
     echo "=== Updating system packages ==="
     dnf update -y
