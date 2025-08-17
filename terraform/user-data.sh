@@ -37,21 +37,19 @@ echo "=== Configuring nginx for Cloudflare Full encryption ==="
 
 # Generate real_ip directives for IPv4 ranges
 IPV4_REAL_IP=""
-IFS=$'\n'
-for ip in ${cloudflare_ipv4_ranges}; do
+echo "${cloudflare_ipv4_ranges}" | while IFS= read -r ip; do
     if [ ! -z "$ip" ] && [ "$ip" != "" ]; then
-        IPV4_REAL_IP="$IPV4_REAL_IP    set_real_ip_from $ip;"$'\n'
+        echo "    set_real_ip_from $ip;" >> /tmp/ipv4_ranges.txt
     fi
 done
 
 # Generate real_ip directives for IPv6 ranges  
 IPV6_REAL_IP=""
-for ip in ${cloudflare_ipv6_ranges}; do
+echo "${cloudflare_ipv6_ranges}" | while IFS= read -r ip; do
     if [ ! -z "$ip" ] && [ "$ip" != "" ]; then
-        IPV6_REAL_IP="$IPV6_REAL_IP    set_real_ip_from $ip;"$'\n'
+        echo "    set_real_ip_from $ip;" >> /tmp/ipv6_ranges.txt
     fi
 done
-unset IFS
 
 cat > /etc/nginx/conf.d/nodeapp.conf << 'NGINX_CONFIG'
 server {
@@ -76,9 +74,13 @@ server {
 NGINX_CONFIG
 
 # Append the dynamic IP ranges
-echo "$IPV4_REAL_IP" >> /etc/nginx/conf.d/nodeapp.conf
+if [ -f /tmp/ipv4_ranges.txt ]; then
+    cat /tmp/ipv4_ranges.txt >> /etc/nginx/conf.d/nodeapp.conf
+fi
 echo "    # IPv6 ranges" >> /etc/nginx/conf.d/nodeapp.conf
-echo "$IPV6_REAL_IP" >> /etc/nginx/conf.d/nodeapp.conf
+if [ -f /tmp/ipv6_ranges.txt ]; then
+    cat /tmp/ipv6_ranges.txt >> /etc/nginx/conf.d/nodeapp.conf
+fi
 
 # Append the rest of the configuration
 cat >> /etc/nginx/conf.d/nodeapp.conf << 'NGINX_CONFIG'
@@ -110,6 +112,9 @@ cat >> /etc/nginx/conf.d/nodeapp.conf << 'NGINX_CONFIG'
 }
 NGINX_CONFIG
 echo "Nginx configuration written"
+
+# Clean up temporary files
+rm -f /tmp/ipv4_ranges.txt /tmp/ipv6_ranges.txt
 
 echo "=== Removing default nginx config ==="
 rm -f /etc/nginx/conf.d/default.conf
