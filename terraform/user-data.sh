@@ -51,7 +51,7 @@ echo "${cloudflare_ipv6_ranges}" | while IFS= read -r ip; do
     fi
 done
 
-cat > /etc/nginx/default.d/nodeapp.conf << 'NGINX_CONFIG'
+cat > /etc/nginx/conf.d/nodeapp.conf << 'NGINX_CONFIG'
 server {
     listen 443 ssl default_server;
     listen 80 default_server;
@@ -83,7 +83,7 @@ if [ -f /tmp/ipv6_ranges.txt ]; then
 fi
 
 # Append the rest of the configuration
-cat >> /etc/nginx/default.d/nodeapp.conf << 'NGINX_CONFIG'
+cat >> /etc/nginx/conf.d/nodeapp.conf << 'NGINX_CONFIG'
     location / {
         proxy_pass http://localhost:${app_port};
         proxy_set_header Host $host;
@@ -104,7 +104,10 @@ echo "Nginx configuration written"
 rm -f /tmp/ipv4_ranges.txt /tmp/ipv6_ranges.txt
 
 echo "=== Removing default nginx config ==="
-rm -f /etc/nginx/default.d/default.conf
+rm -f /etc/nginx/conf.d/default.conf
+
+echo "=== Disabling default server block ==="
+sed -i '/server {/,/^}/s/^/#/' /etc/nginx/nginx.conf
 
 echo "=== Testing nginx configuration ==="
 nginx -t
@@ -112,7 +115,7 @@ if [ $? -eq 0 ]; then
     echo "Nginx configuration test passed"
 else
     echo "ERROR: Nginx configuration test failed"
-    cat /etc/nginx/default.d/nodeapp.conf
+    cat /etc/nginx/conf.d/nodeapp.conf
     exit 1
 fi
 
