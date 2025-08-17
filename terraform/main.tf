@@ -10,6 +10,10 @@ terraform {
       source  = "hashicorp/aws"
       version = "6.9.0"
     }
+    http = {
+      source  = "hashicorp/http"
+      version = "~> 3.0"
+    }
   }
 }
 
@@ -54,17 +58,49 @@ resource "aws_vpc_security_group_ingress_rule" "ssh" {
   }
 }
 
-# Security group ingress rule for HTTPS traffic
-resource "aws_vpc_security_group_ingress_rule" "https" {
+# Fetch Cloudflare IP ranges from official endpoints
+data "http" "cloudflare_ipv4" {
+  url = "https://www.cloudflare.com/ips-v4"
+}
+
+data "http" "cloudflare_ipv6" {
+  url = "https://www.cloudflare.com/ips-v6"
+}
+
+locals {
+  cloudflare_ipv4_ranges = split("\n", chomp(data.http.cloudflare_ipv4.response_body))
+  cloudflare_ipv6_ranges = split("\n", chomp(data.http.cloudflare_ipv6.response_body))
+}
+
+# Security group ingress rules for HTTPS traffic (Cloudflare IPv4)
+resource "aws_vpc_security_group_ingress_rule" "https_cloudflare_ipv4" {
+  for_each = toset(local.cloudflare_ipv4_ranges)
+
   security_group_id = aws_security_group.web_sg.id
-  description       = "HTTPS"
+  description       = "HTTPS from Cloudflare IP ${each.value}"
   from_port         = 443
   to_port           = 443
   ip_protocol       = "tcp"
-  cidr_ipv4         = "0.0.0.0/0"
+  cidr_ipv4         = each.value
 
   tags = {
-    Name = "${var.project_name}-https-ingress"
+    Name = "${var.project_name}-https-cloudflare-${replace(each.value, "/", "-")}"
+  }
+}
+
+# Security group ingress rules for HTTPS traffic (Cloudflare IPv6)
+resource "aws_vpc_security_group_ingress_rule" "https_cloudflare_ipv6" {
+  for_each = toset(local.cloudflare_ipv6_ranges)
+
+  security_group_id = aws_security_group.web_sg.id
+  description       = "HTTPS from Cloudflare IPv6 ${each.value}"
+  from_port         = 443
+  to_port           = 443
+  ip_protocol       = "tcp"
+  cidr_ipv6         = each.value
+
+  tags = {
+    Name = "${var.project_name}-https-cloudflare-ipv6-${replace(each.value, "/", "-")}"
   }
 }
 
@@ -83,11 +119,13 @@ resource "aws_vpc_security_group_egress_rule" "all_outbound" {
 # User data script to setup Node.js, nginx and run the app
 locals {
   user_data = templatefile("${path.module}/user-data.sh", {
-    deployment_id     = var.deployment_id
-    github_repo_url   = var.github_repo_url
-    app_directory     = var.app_directory
-    http_port        = var.http_port
-    app_port         = var.app_port
+    deployment_id        = var.deployment_id
+    github_repo_url      = var.github_repo_url
+    app_directory        = var.app_directory
+    app_port            = var.app_port
+    domain_name         = var.domain_name
+    cloudflare_ipv4_ranges = join("\n", local.cloudflare_ipv4_ranges)
+    cloudflare_ipv6_ranges = join("\n", local.cloudflare_ipv6_ranges)
   })
 }
 

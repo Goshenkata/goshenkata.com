@@ -5,7 +5,7 @@ echo "=== Deployment ID: ${deployment_id} ==="
 echo "=== Updating system packages ==="
 dnf update -y
 
-echo "=== Installing nodejs, npm, git, nginx, openssl ==="
+echo "=== Installing openssl for SSL certificates ==="
 dnf install -y nodejs npm git nginx openssl
 
 echo "=== Cloning repository ==="
@@ -20,45 +20,61 @@ echo "=== Starting Node.js application in background ==="
 nohup npm start > /home/ec2-user/app.log 2>&1 &
 echo "Node.js app started with PID: $!"
 
-echo "=== Generating self-signed SSL certificate ==="
+echo "=== Creating SSL certificate directory ==="
 mkdir -p /etc/nginx/ssl
-openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
-  -keyout /etc/nginx/ssl/nginx.key \
-  -out /etc/nginx/ssl/nginx.crt \
-  -subj "/C=BG/ST=Sofia/L=Sofia/O=Goshenkata/CN=localhost"
 
-# Set proper permissions for SSL files
+echo "=== Generating self-signed SSL certificate for Cloudflare Full mode ==="
+openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
+    -keyout /etc/nginx/ssl/nginx.key \
+    -out /etc/nginx/ssl/nginx.crt \
+    -subj "/C=US/ST=State/L=City/O=Organization/CN=${domain_name}"
+
+echo "=== Setting SSL certificate permissions ==="
 chmod 600 /etc/nginx/ssl/nginx.key
 chmod 644 /etc/nginx/ssl/nginx.crt
-chown root:root /etc/nginx/ssl/nginx.key /etc/nginx/ssl/nginx.crt
 
-# Verify SSL files exist
-if [ -f "/etc/nginx/ssl/nginx.crt" ] && [ -f "/etc/nginx/ssl/nginx.key" ]; then
-    echo "SSL certificate generated successfully"
-    ls -la /etc/nginx/ssl/
-else
-    echo "ERROR: SSL certificate generation failed"
-    exit 1
-fi
+echo "=== Configuring nginx for Cloudflare Full encryption ==="
 
-echo "=== Configuring nginx with SSL ==="
-cat > /etc/nginx/conf.d/nodeapp.conf << 'NGINX_CONFIG'
+# Generate real_ip directives for IPv4 ranges
+IPV4_REAL_IP=""
+for ip in ${cloudflare_ipv4_ranges}; do
+    if [ ! -z "$ip" ]; then
+        IPV4_REAL_IP="$IPV4_REAL_IP    set_real_ip_from $ip;\n"
+    fi
+done
+
+# Generate real_ip directives for IPv6 ranges  
+IPV6_REAL_IP=""
+for ip in ${cloudflare_ipv6_ranges}; do
+    if [ ! -z "$ip" ]; then
+        IPV6_REAL_IP="$IPV6_REAL_IP    set_real_ip_from $ip;\n"
+    fi
+done
+
+cat > /etc/nginx/conf.d/nodeapp.conf << NGINX_CONFIG
 server {
-    listen ${http_port};
-    listen 443 ssl;
-    server_name _;
+    listen 443 ssl default_server;
+    server_name ${domain_name} www.${domain_name};
     
+    # SSL Configuration for Cloudflare Full mode
     ssl_certificate /etc/nginx/ssl/nginx.crt;
     ssl_certificate_key /etc/nginx/ssl/nginx.key;
     ssl_protocols TLSv1.2 TLSv1.3;
-    ssl_ciphers HIGH:!aNULL:!MD5;
+    ssl_ciphers ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-AES128-SHA256:ECDHE-RSA-AES256-SHA384;
+    ssl_prefer_server_ciphers off;
     
+    # Restore real visitor IP from Cloudflare headers
+    real_ip_header CF-Connecting-IP;
+    # IPv4 ranges
+$(echo -e "$IPV4_REAL_IP")    # IPv6 ranges
+$(echo -e "$IPV6_REAL_IP")    
     location / {
         proxy_pass http://localhost:${app_port};
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
+        proxy_set_header X-Forwarded-Host \$host;
     }
 }
 NGINX_CONFIG
