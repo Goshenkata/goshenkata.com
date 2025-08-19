@@ -10,10 +10,3 @@ if [ -d "$PROJECT_DIR" ]; then
 else
     echo "No existing project directory found"
 fi
-
-# Create fresh directory with proper ownership
-mkdir -p "$PROJECT_DIR"
-chown ec2-user:ec2-user "$PROJECT_DIR"
-
-echo "BeforeInstall completed"
-exit 0
