@@ -240,32 +240,58 @@ resource "cloudflare_dns_record" "root" {
 # CodeDeploy application and deployment group
 module "codedeploy" {
   source = "cloudposse/code-deploy/aws"
-  version = "0.3.0"
+  version = "0.2.3"
 
-  application_name     = "goshenkata.com"
-  deployment_group_name = "production"
+  # Required inputs
+  enabled                    = true
+  name                      = "goshenkata"
+  namespace                 = "gk"
+  environment               = "prod"
+  stage                     = "prod"
   
-  # EC2 tag filters to target instances
-  ec2_tag_filters = [
+  # Deployment configuration
+  compute_platform = "EC2"
+  
+  deployment_style = {
+    deployment_option = "WITHOUT_TRAFFIC_CONTROL"
+    deployment_type   = "IN_PLACE"
+  }
+  
+  minimum_healthy_hosts = {
+    type  = "HOST_COUNT"
+    value = 0
+  }
+  
+  # EC2 tag filters
+  ec2_tag_filter = [
     {
       key   = "Project"
       type  = "KEY_AND_VALUE"
       value = var.project_name
     }
   ]
-
-  # Disable auto rollback and load balancing
-  auto_rollback_enabled                = false
-  auto_rollback_events                 = []
-  deployment_style_deployment_option   = "WITHOUT_TRAFFIC_CONTROL"
-  deployment_style_deployment_type     = "IN_PLACE"
   
-  # No load balancer configuration
-  load_balancer_info_target_group_infos = []
+  # Required but unused for our setup
+  alarm_configuration = {
+    alarms                    = []
+    ignore_poll_alarm_failure = true
+  }
+  
+  blue_green_deployment_config = {}
+  ecs_service                 = []
+  load_balancer_info          = {}
+  traffic_routing_config = {
+    type       = "AllAtOnce"
+    interval   = 0
+    percentage = 0
+  }
+  
+  # Service role - let module create default
+  service_role_arn = ""
+  sns_topic_arn    = ""
   
   tags = {
     Project = var.project_name
-    Environment = "production"
   }
 }
 
