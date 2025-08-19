@@ -1,24 +1,20 @@
 #!/bin/bash
-echo "=== Starting EC2 User Data Script ==="
+echo "=== Starting EC2 Bootstrap Script ==="
 echo "=== Deployment ID: ${deployment_id} ==="
 
 echo "=== Updating system packages ==="
 dnf update -y
 
-echo "=== Installing openssl for SSL certificates ==="
-dnf install -y nodejs npm git nginx openssl
+echo "=== Installing required packages ==="
+dnf install -y nodejs npm git nginx openssl ruby wget
 
-echo "=== Cloning repository ==="
+echo "=== Installing CodeDeploy agent ==="
 cd /home/ec2-user
-git clone ${github_repo_url}
-cd goshenkata.com/${app_directory}
-
-echo "=== Installing npm dependencies ==="
-npm install
-
-echo "=== Starting Node.js application in background ==="
-nohup npm start > /home/ec2-user/app.log 2>&1 &
-echo "Node.js app started with PID: $!"
+wget https://aws-codedeploy-eu-central-1.s3.eu-central-1.amazonaws.com/latest/install
+chmod +x ./install
+./install auto
+systemctl enable codedeploy-agent
+systemctl start codedeploy-agent
 
 echo "=== Creating SSL certificate directory ==="
 mkdir -p /etc/nginx/ssl
@@ -131,22 +127,15 @@ else
     exit 1
 fi
 
-echo "=== Setting file permissions ==="
-chown -R ec2-user:ec2-user /home/ec2-user/goshenkata.com
+echo "=== Setting up ec2-user environment ==="
+chown -R ec2-user:ec2-user /home/ec2-user
 
-echo "=== Setup complete! ==="
-echo "Node.js logs: tail -f /home/ec2-user/app.log"
-echo "Nginx access logs: tail -f /var/log/nginx/access.log"
-echo "Nginx error logs: tail -f /var/log/nginx/error.log"
-
-echo "=== Deployment Information ==="
-echo "Domain configured: ${domain_name}"
-echo "App running on port: ${app_port}"
-echo "Test URLs:"
-echo "  - Main app: https://${domain_name}/"
+echo "=== Bootstrap complete! ==="
+echo "CodeDeploy agent status: $(systemctl is-active codedeploy-agent)"
+echo "Nginx status: $(systemctl is-active nginx)"
+echo "System ready for CodeDeploy deployments"
 
 echo "=== Troubleshooting commands ==="
+echo "Check CodeDeploy agent: systemctl status codedeploy-agent"
 echo "Check nginx status: systemctl status nginx"
-echo "Check app process: ps aux | grep node"
-echo "Test nginx config: nginx -t"
 echo "View nginx config: cat /etc/nginx/conf.d/nodeapp.conf"

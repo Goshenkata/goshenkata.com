@@ -133,6 +133,44 @@ locals {
   })
 }
 
+# IAM role for EC2 to work with CodeDeploy
+resource "aws_iam_role" "ec2_codedeploy" {
+  name = "${var.project_name}-ec2-codedeploy-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "ec2.amazonaws.com"
+        }
+      }
+    ]
+  })
+
+  tags = {
+    Project = var.project_name
+  }
+}
+
+# Attach CodeDeploy policy to EC2 role
+resource "aws_iam_role_policy_attachment" "ec2_codedeploy" {
+  role       = aws_iam_role.ec2_codedeploy.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/EC2RoleForAWSCodeDeploy"
+}
+
+# Instance profile for EC2
+resource "aws_iam_instance_profile" "ec2_codedeploy" {
+  name = "${var.project_name}-ec2-codedeploy-profile"
+  role = aws_iam_role.ec2_codedeploy.name
+
+  tags = {
+    Project = var.project_name
+  }
+}
+
 # EC2 instance using terraform-aws-modules
 module "ec2_instance" {
   source  = "terraform-aws-modules/ec2-instance/aws"
@@ -146,6 +184,7 @@ module "ec2_instance" {
   vpc_security_group_ids      = [aws_security_group.web_sg.id]
   subnet_id                   = data.aws_subnets.default.ids[0]
   associate_public_ip_address = true
+  iam_instance_profile        = aws_iam_instance_profile.ec2_codedeploy.name
 
   user_data_base64            = base64encode(local.user_data)
   user_data_replace_on_change = true  # This forces recreation when user_data changes
@@ -196,4 +235,59 @@ resource "cloudflare_dns_record" "root" {
   ttl     = 1
   proxied = true
   comment = "Managed by Terraform - Points to EC2 instance"
+}
+
+# CodeDeploy application and deployment group
+module "codedeploy" {
+  source = "cloudposse/code-deploy/aws"
+  version = "0.3.0"
+
+  application_name     = "goshenkata.com"
+  deployment_group_name = "production"
+  
+  # EC2 tag filters to target instances
+  ec2_tag_filters = [
+    {
+      key   = "Project"
+      type  = "KEY_AND_VALUE"
+      value = var.project_name
+    }
+  ]
+
+  # Disable auto rollback and load balancing
+  auto_rollback_enabled                = false
+  auto_rollback_events                 = []
+  deployment_style_deployment_option   = "WITHOUT_TRAFFIC_CONTROL"
+  deployment_style_deployment_type     = "IN_PLACE"
+  
+  # No load balancer configuration
+  load_balancer_info_target_group_infos = []
+  
+  tags = {
+    Project = var.project_name
+    Environment = "production"
+  }
+}
+
+# Create initial CodeDeploy deployment
+resource "aws_codedeploy_deployment" "initial_deployment" {
+  depends_on = [module.codedeploy, module.ec2_instance]
+  
+  application_name          = module.codedeploy.application_name
+  deployment_group_name     = module.codedeploy.deployment_group_name
+  deployment_config_name    = "CodeDeployDefault.AllAtOnceMaxCodeDeploy"
+  description              = "Initial deployment for ${var.project_name} - ${var.deployment_id}"
+
+  revision {
+    revision_type = "GitHub"
+    
+    git_hub_location {
+      commit_id  = var.deployment_id
+      repository = "Goshenkata/goshenkata.com"
+    }
+  }
+
+  auto_rollback_configuration {
+    enabled = false
+  }
 }

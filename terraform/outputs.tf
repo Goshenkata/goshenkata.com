@@ -23,3 +23,20 @@ output "cloudflare_records" {
     }
   }
 }
+
+output "codedeploy_application" {
+  description = "CodeDeploy application details"
+  value = {
+    application_name      = module.codedeploy.application_name
+    deployment_group_name = module.codedeploy.deployment_group_name
+    service_role_arn     = module.codedeploy.service_role_arn
+  }
+}
+
+output "codedeploy_deployment" {
+  description = "Initial CodeDeploy deployment details"
+  value = {
+    deployment_id = aws_codedeploy_deployment.initial_deployment.id
+    status       = aws_codedeploy_deployment.initial_deployment.status
+  }
+}
