@@ -271,24 +271,10 @@ module "codedeploy" {
     }
   ]
   
-  # Required but unused for our setup
   alarm_configuration = {
     alarms                    = []
     ignore_poll_alarm_failure = true
   }
-  
-  blue_green_deployment_config = {}
-  ecs_service                 = []
-  load_balancer_info          = {}
-  traffic_routing_config = {
-    type       = "AllAtOnce"
-    interval   = 0
-    percentage = 0
-  }
-  
-  # Service role - let module create default
-  service_role_arn = ""
-  sns_topic_arn    = ""
   
   tags = {
     Project = var.project_name
