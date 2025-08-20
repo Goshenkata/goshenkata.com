@@ -8,8 +8,13 @@ APP_PORT="3000"
 cd "$PROJECT_DIR/$APP_DIRECTORY"
 
 echo "Starting Node.js application..."
+
+# Create log file with proper permissions
+touch /home/ec2-user/app.log
+chown ec2-user:ec2-user /home/ec2-user/app.log
+
 # Start the application as ec2-user in background
-sudo -u ec2-user nohup npm start > /home/ec2-user/app.log 2>&1 &
+sudo -u ec2-user bash -c "cd '$PROJECT_DIR/$APP_DIRECTORY' && nohup npm start > /home/ec2-user/app.log 2>&1 &"
 
 if [ $? -eq 0 ]; then
     echo "Node.js application started successfully"
