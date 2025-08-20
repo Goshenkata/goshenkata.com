@@ -158,7 +158,7 @@ resource "aws_iam_role" "ec2_codedeploy" {
 # Attach CodeDeploy policy to EC2 role
 resource "aws_iam_role_policy_attachment" "ec2_codedeploy" {
   role       = aws_iam_role.ec2_codedeploy.name
-  policy_arn = "arn:aws:iam::aws:policy/service-role/EC2RoleForAWSCodeDeploy"
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonEC2RoleforAWSCodeDeploy"
 }
 
 # Instance profile for EC2
@@ -270,11 +270,6 @@ module "codedeploy" {
       value = var.project_name
     }
   ]
-  
-  alarm_configuration = {
-    alarms                    = []
-    ignore_poll_alarm_failure = true
-  }
   
   tags = {
     Project = var.project_name
