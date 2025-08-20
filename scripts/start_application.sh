@@ -4,6 +4,7 @@ echo "=== ApplicationStart: Starting Node.js application ==="
 echo "=== Install: Installing npm dependencies ==="
 
 APP_DIRECTORY="/home/ec2-user/frontend"
+PROJECT_DIR="/home/ec2-user"
 
 if [ ! -d "$APP_DIRECTORY" ]; then
     echo "ERROR: Frontend directory not found at $APP_DIRECTORY"
@@ -25,11 +26,13 @@ echo "Install completed successfully"
 echo "Starting Node.js application..."
 
 # Create log file with proper permissions
-touch /home/ec2-user/app.log
-chown ec2-user:ec2-user /home/ec2-user/app.log
+LOG_FILE="/home/ec2-user/app.log"
+touch "$LOG_FILE"
+chown ec2-user:ec2-user "$LOG_FILE"
 
 # Start the application as ec2-user in background
-sudo -u ec2-user bash -c "cd '$PROJECT_DIR/$APP_DIRECTORY' && nohup npm start > /home/ec2-user/app.log 2>&1 &"
+echo "Starting application from directory: $APP_DIRECTORY"
+sudo -u ec2-user bash -c "cd '$APP_DIRECTORY' && nohup npm start > '$LOG_FILE' 2>&1 &"
 
 if [ $? -eq 0 ]; then
     echo "Node.js application started successfully"
