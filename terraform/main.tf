@@ -294,26 +294,4 @@ module "codedeploy" {
     Project = var.project_name
   }
 }
-
-# Create initial CodeDeploy deployment
-resource "aws_codedeploy_deployment" "initial_deployment" {
-  depends_on = [module.codedeploy, module.ec2_instance]
-  
-  application_name          = module.codedeploy.application_name
-  deployment_group_name     = module.codedeploy.deployment_group_name
-  deployment_config_name    = "CodeDeployDefault.AllAtOnceMaxCodeDeploy"
-  description              = "Initial deployment for ${var.project_name} - ${var.deployment_id}"
-
-  revision {
-    revision_type = "GitHub"
-    
-    git_hub_location {
-      commit_id  = var.deployment_id
-      repository = "Goshenkata/goshenkata.com"
-    }
-  }
-
-  auto_rollback_configuration {
-    enabled = false
-  }
-}
+//TODO create deployment group and trigger from workflow
