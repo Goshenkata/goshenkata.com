@@ -78,7 +78,7 @@ jobs:
         # Get the raw JSON output and parse it
         CODEDEPLOY_OUTPUT=$(terraform output -json codedeploy_application)
         APP_NAME=$(echo "$CODEDEPLOY_OUTPUT" | jq -r '.application_name')
-        DEPLOYMENT_GROUP=$(echo "$CODEDEPLOY_OUTPUT" | jq -r '.deployment_group_id')
+        DEPLOYMENT_GROUP=$(echo "$CODEDEPLOY_OUTPUT" | jq -r '.deployment_group_name')
         echo "app_name=$APP_NAME" >> $GITHUB_OUTPUT
         echo "deployment_group=$DEPLOYMENT_GROUP" >> $GITHUB_OUTPUT
 
