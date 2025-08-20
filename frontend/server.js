@@ -19,7 +19,7 @@ app.use(express.json());
 
 // Route for the homepage
 app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'html', 'index.html'));
+  res.sendFile(path.join(__dirname, 'static', 'index.html'));
 });
 
 app.get('/health', (req, res) => {
