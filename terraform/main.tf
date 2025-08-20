@@ -250,7 +250,7 @@ module "codedeploy" {
   stage                     = "prod"
   
   # Deployment configuration
-  compute_platform = "EC2"
+  compute_platform = "Server"
   
   deployment_style = {
     deployment_option = "WITHOUT_TRAFFIC_CONTROL"
