@@ -275,4 +275,3 @@ module "codedeploy" {
     Project = var.project_name
   }
 }
-//TODO create deployment group and trigger from workflow
