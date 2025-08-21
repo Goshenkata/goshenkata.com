@@ -123,7 +123,6 @@ resource "aws_vpc_security_group_egress_rule" "all_outbound" {
 # User data script to setup Node.js, nginx and run the app
 locals {
   user_data = templatefile("${path.module}/user-data.sh", {
-    deployment_id        = var.deployment_id
     github_repo_url      = var.github_repo_url
     app_directory        = var.app_directory
     app_port            = var.app_port
@@ -187,7 +186,6 @@ module "ec2_instance" {
   iam_instance_profile        = aws_iam_instance_profile.ec2_codedeploy.name
 
   user_data_base64            = base64encode(local.user_data)
-  user_data_replace_on_change = true  # This forces recreation when user_data changes
 
   tags = {
     Name = "${var.project_name}-web-server"

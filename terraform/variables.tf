@@ -34,12 +34,6 @@ variable "app_directory" {
   default     = "frontend"
 }
 
-variable "deployment_id" {
-  description = "Deployment identifier (usually git commit hash)"
-  type        = string
-  default     = "local-deploy"
-}
-
 variable "domain_name" {
   description = "Domain name for SSL certificate (leave null to disable HTTPS)"
   type        = string

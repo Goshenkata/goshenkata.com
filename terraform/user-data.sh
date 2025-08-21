@@ -1,7 +1,5 @@
 #!/bin/bash
 echo "=== Starting EC2 Bootstrap Script ==="
-echo "=== Deployment ID: ${deployment_id} ==="
-
 echo "=== Updating system packages ==="
 dnf update -y
 
