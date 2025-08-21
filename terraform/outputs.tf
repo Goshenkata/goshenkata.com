@@ -10,5 +10,5 @@ output "codedeploy_application_name" {
 
 output "codedeploy_deployment_group_name" {
   description = "CodeDeploy deployment group name"
-  value       = module.codedeploy.deployment_group_name
+  value       = module.codedeploy.name
 }
