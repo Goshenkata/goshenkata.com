@@ -244,7 +244,7 @@ module "codedeploy" {
 
   # Required inputs
   enabled                    = true
-  name                      = "goshenkata"
+  name                      = var.deployment_name
   namespace                 = "gk"
   environment               = "prod"
   stage                     = "prod"

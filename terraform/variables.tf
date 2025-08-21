@@ -62,3 +62,9 @@ variable "cloudflare_zone_id" {
   description = "Cloudflare Zone ID for the domain"
   type        = string
 }
+
+variable "deployment_name" {
+  description = "Name for CodeDeploy application and deployment group"
+  type        = string
+  default     = "goshenkata-deployment"
+}
