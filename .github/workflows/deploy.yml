@@ -61,15 +61,11 @@ jobs:
       working-directory: terraform
       run: terraform init
 
-    - name: Get Git Commit Hash
-      id: git-hash
-      run: echo "hash=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
-
     - name: Terraform Apply
       working-directory: terraform
       env:
         CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-      run: terraform apply -auto-approve -var="deployment_id=${{ steps.git-hash.outputs.hash }}" -var="cloudflare_api_token=${{ secrets.CLOUDFLARE_API_TOKEN }}" -var="cloudflare_zone_id=${{ secrets.CLOUDFLARE_ZONE_ID }}"
+      run: terraform apply -auto-approve -var="cloudflare_api_token=${{ secrets.CLOUDFLARE_API_TOKEN }}" -var="cloudflare_zone_id=${{ secrets.CLOUDFLARE_ZONE_ID }}"
 
     - name: Get Terraform outputs
       id: terraform-outputs
