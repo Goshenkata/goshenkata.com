@@ -239,6 +239,7 @@ module "ec2_instance" {
   iam_instance_profile        = aws_iam_instance_profile.ec2_codedeploy.name
 
   user_data_base64            = base64encode(local.user_data)
+  user_data_replace_on_change = true
 
   tags = {
     Name = "${var.project_name}-web-server"
