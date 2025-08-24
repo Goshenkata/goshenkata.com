@@ -53,13 +53,9 @@ jobs:
 
     - name: Terraform Destroy
       working-directory: terraform
-      env:
-        CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
       run: |
         echo "🔥 Destroying Terraform infrastructure..."
-        terraform destroy -auto-approve \
-          -var="cloudflare_api_token=${{ secrets.CLOUDFLARE_API_TOKEN }}" \
-          -var="cloudflare_zone_id=${{ secrets.CLOUDFLARE_ZONE_ID }}"
+        terraform destroy -auto-approve
 
     - name: Destruction Complete
       run: |
