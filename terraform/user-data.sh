@@ -128,6 +128,22 @@ fi
 echo "=== Setting up ec2-user environment ==="
 chown -R ec2-user:ec2-user /home/ec2-user
 
+echo "=== Creating .env file in home directory ==="
+cat > /home/ec2-user/.env <<'EOF'
+NODE_ENV=production
+PORT=${app_port}
+DOMAIN=${domain_name}
+# SSM parameters
+${ssm_exports}
+EOF
+chown ec2-user:ec2-user /home/ec2-user/.env
+chmod 600 /home/ec2-user/.env
+
+# Load .env file for this session
+set -a
+source /home/ec2-user/.env
+set +a
+
 echo "=== Bootstrap complete! ==="
 echo "CodeDeploy agent status: $(systemctl is-active codedeploy-agent)"
 echo "Nginx status: $(systemctl is-active nginx)"
