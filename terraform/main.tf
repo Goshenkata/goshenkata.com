@@ -288,9 +288,6 @@ resource "cloudflare_dns_record" "root" {
   comment = "Managed by Terraform - Points to EC2 instance"
 }
 
-output "ssm_parameters_names_debug" {
-  value = keys(local.ssm_parameters)
-}
 
 # CodeDeploy application and deployment group
 module "codedeploy" {
