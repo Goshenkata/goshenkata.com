@@ -139,7 +139,7 @@ locals {
   # Generate just the SSM export statements (no duplicates)
   ssm_exports = join("\n", [
     for key, value in local.ssm_parameters :
-    "${upper(key)}='${value}'"
+    "${upper(key)}=${value}"
   ])
   
   user_data = templatefile("${path.module}/user-data.sh", {
