@@ -130,11 +130,10 @@ data "aws_ssm_parameters_by_path" "app_config" {
 
 # Create a map of parameter names to values for easy access
 locals {
-  # Extract parameter names and values
+  # Extract parameter names and values, uppercased keys
   ssm_parameters = {
     for param in data.aws_ssm_parameters_by_path.app_config.names :
-    # Remove the /goshenkata/ prefix and replace / with _
-    replace(replace(param, "/goshenkata/", ""), "/", "_") => data.aws_ssm_parameters_by_path.app_config.values[index(data.aws_ssm_parameters_by_path.app_config.names, param)]
+    upper(replace(replace(param, "/goshenkata/", ""), "/", "_")) => data.aws_ssm_parameters_by_path.app_config.values[index(data.aws_ssm_parameters_by_path.app_config.names, param)]
   }
   
   # Generate just the SSM export statements (no duplicates)
@@ -280,7 +279,7 @@ provider "cloudflare" {
 
 # Create A record for the root domain
 resource "cloudflare_dns_record" "root" {
-  zone_id = var.cloudflare_zone_id
+  zone_id = local.ssm_parameters["CLOUDFLARE_ZONE_ID"]
   name    = "@"
   content = module.ec2_instance.public_ip
   type    = "A"
