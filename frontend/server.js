@@ -101,12 +101,7 @@ app.get('/logout', (req, res) => {
 });
 
 app.get('/health', (req, res) => {
-  res.status(200).json({
-    status: 'OK',
-    message: 'Node.js server is running',
-    timestamp: new Date().toISOString(),
-    uptime: process.uptime()
-  });
+  res.status(200).send('OK');
 });
 
 // Error handler
