@@ -101,7 +101,12 @@ app.get('/logout', (req, res) => {
 });
 
 app.get('/health', (req, res) => {
-  res.status(200).send('OK');
+  res.status(200).json({
+    status: 'OK',
+    message: 'Node.js server is running',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime()
+  });
 });
 
 // Error handler
@@ -109,6 +114,28 @@ app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).send(err);
 });
+
+// Fast-fail checks for required environment variables
+if (!process.env.OIDC_SECRET) {
+  console.error('FATAL: OIDC_SECRET environment variable is not set!');
+  process.exit(1);
+}
+if (!process.env.COGNITO_ENDPOINT) {
+  console.error('FATAL: COGNITO_ENDPOINT environment variable is not set!');
+  process.exit(1);
+}
+if (!process.env.COGNITO_CLIENT_ID) {
+  console.error('FATAL: COGNITO_CLIENT_ID environment variable is not set!');
+  process.exit(1);
+}
+if (!process.env.COGNITO_CLIENT_SECRET) {
+  console.error('FATAL: COGNITO_CLIENT_SECRET environment variable is not set!');
+  process.exit(1);
+}
+if (!process.env.DOMAIN) {
+  console.error('FATAL: DOMAIN environment variable is not set!');
+  process.exit(1);
+}
 
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`Server is running on http://0.0.0.0:${PORT}`);
