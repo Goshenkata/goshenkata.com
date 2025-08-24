@@ -1,9 +1,11 @@
-const express = require('express');
-const session = require('express-session');
-const openidClient = require('openid-client');
-const { join } = require('path');
-const { Issuer, generators } = openidClient;
+import express from 'express';
+import session from 'express-session';
+import { Issuer, generators } from 'openid-client';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -19,7 +21,7 @@ async function initializeClient() {
         response_types: ['code']
     });
 };
-initializeClient().catch(console.error);
+await initializeClient().catch(console.error);
 
 app.use(session({
     secret: process.env.OIDC_SECRET,
@@ -37,13 +39,13 @@ const checkAuth = (req, res, next) => {
     next();
 };
 
-app.set('view engine', 'ejs');
 
-// Serve static files from the static directory
 app.use(express.static(join(__dirname, 'static')));
 
 // Middleware to parse JSON bodies
 app.use(express.json());
+
+app.set('view engine', 'ejs');
 
 // Route for the homepage
 app.get('/', checkAuth, (req, res) => {
