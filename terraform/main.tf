@@ -133,7 +133,7 @@ locals {
   # Extract parameter names and values, uppercased keys
   ssm_parameters = {
     for param in data.aws_ssm_parameters_by_path.app_config.names :
-    upper(replace(replace(param, "/goshenkata/", ""), "/", "_")) => data.aws_ssm_parameters_by_path.app_config.values[index(data.aws_ssm_parameters_by_path.app_config.names, param)]
+    upper(trim(replace(param, "/goshenkata/", ""), "/")) => data.aws_ssm_parameters_by_path.app_config.values[index(data.aws_ssm_parameters_by_path.app_config.names, param)]
   }
   
   # Generate just the SSM export statements (no duplicates)
@@ -286,6 +286,10 @@ resource "cloudflare_dns_record" "root" {
   ttl     = 1
   proxied = true
   comment = "Managed by Terraform - Points to EC2 instance"
+}
+
+output "ssm_parameters_names_debug" {
+  value = keys(local.ssm_parameters)
 }
 
 # CodeDeploy application and deployment group
