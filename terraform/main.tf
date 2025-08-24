@@ -274,7 +274,7 @@ data "aws_ami" "amazon_linux" {
 
 # Cloudflare provider configuration
 provider "cloudflare" {
-  # API token will be provided via CLOUDFLARE_API_TOKEN environment variable
+  api_token = local.ssm_parameters["CLOUDFLARE_API_TOKEN"]
 }
 
 # Create A record for the root domain
