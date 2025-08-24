@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e
 echo "=== Starting EC2 Bootstrap Script ==="
 echo "=== Updating system packages ==="
 dnf update -y
