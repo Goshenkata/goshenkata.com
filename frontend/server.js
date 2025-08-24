@@ -1,7 +1,9 @@
-import express from 'express';
-import session from 'express-session';
-import { join } from 'path';
-import { Issuer, generators } from 'openid-client';
+const express = require('express');
+const session = require('express-session');
+const openidClient = require('openid-client');
+const { join } = require('path');
+const { Issuer, generators } = openidClient;
+
 
 const app = express();
 const PORT = process.env.PORT || 3000;
