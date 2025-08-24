@@ -10,12 +10,17 @@
   },
   "dependencies": {
     "express": "^4.18.2",
-    "path": "^0.12.7"
+    "path": "^0.12.7",
+    "openid-client": "^6.6.4"
   },
   "devDependencies": {
     "nodemon": "^3.0.1"
   },
-  "keywords": ["goshenkata", "express", "nodejs"],
+  "keywords": [
+    "goshenkata",
+    "express",
+    "nodejs"
+  ],
   "author": "",
   "license": "ISC"
 }

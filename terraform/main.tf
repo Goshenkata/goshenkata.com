@@ -121,14 +121,34 @@ resource "aws_vpc_security_group_egress_rule" "all_outbound" {
 }
 
 # User data script to setup Node.js, nginx and run the app
+
+# Fetch all parameters with /goshenkata/ prefix
+data "aws_ssm_parameters_by_path" "app_config" {
+  path      = "/goshenkata"
+  recursive = true
+}
+
+# Create a map of parameter names to values for easy access
 locals {
+  # Extract parameter names and values
+  ssm_parameters = {
+    for param in data.aws_ssm_parameters_by_path.app_config.names :
+    # Remove the /goshenkata/ prefix and replace / with _
+    replace(replace(param, "/goshenkata/", ""), "/", "_") => data.aws_ssm_parameters_by_path.app_config.values[index(data.aws_ssm_parameters_by_path.app_config.names, param)]
+  }
+  
+  # Generate just the SSM export statements (no duplicates)
+  ssm_exports = join("\n", [
+    for key, value in local.ssm_parameters :
+    "export ${upper(key)}='${value}'"
+  ])
+  
   user_data = templatefile("${path.module}/user-data.sh", {
-    github_repo_url      = var.github_repo_url
-    app_directory        = var.app_directory
-    app_port            = var.app_port
-    domain_name         = var.domain_name
+    app_port              = var.app_port
+    domain_name           = var.domain_name
     cloudflare_ipv4_ranges = join("\n", local.cloudflare_ipv4_ranges)
     cloudflare_ipv6_ranges = join("\n", local.cloudflare_ipv6_ranges)
+    ssm_exports           = local.ssm_exports
   })
 }
 
@@ -158,6 +178,40 @@ resource "aws_iam_role" "ec2_codedeploy" {
 resource "aws_iam_role_policy_attachment" "ec2_codedeploy" {
   role       = aws_iam_role.ec2_codedeploy.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonEC2RoleforAWSCodeDeploy"
+}
+
+# Attach SSM policy to EC2 role for parameter access
+resource "aws_iam_role_policy_attachment" "ec2_ssm" {
+  role       = aws_iam_role.ec2_codedeploy.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+}
+
+# Custom policy for reading goshenkata parameters
+resource "aws_iam_role_policy" "ec2_ssm_parameters" {
+  name = "${var.project_name}-ssm-parameters"
+  role = aws_iam_role.ec2_codedeploy.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "ssm:GetParameter",
+          "ssm:GetParameters",
+          "ssm:GetParametersByPath"
+        ]
+        Resource = "arn:aws:ssm:${var.aws_region}:*:parameter/goshenkata/*"
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "kms:Decrypt"
+        ]
+        Resource = "arn:aws:kms:${var.aws_region}:*:key/alias/aws/ssm"
+      }
+    ]
+  })
 }
 
 # Instance profile for EC2
