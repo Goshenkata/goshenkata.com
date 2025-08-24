@@ -94,7 +94,7 @@ app.get('/login', (req, res) => {
 });
 
 app.get('/logout', (req, res) => {
-    const logoutUrl = `${process.env.COGNITO_ENDPOINT}/logout?client_id=${process.env.COGNITO_CLIENT_ID}&logout_uri=https://${process.env.DOMAIN}/`;
+    const logoutUrl = `https://eu-central-1vg1ozzrl0.auth.eu-central-1.amazoncognito.com/logout?client_id=${process.env.COGNITO_CLIENT_ID}&logout_uri=https://${process.env.DOMAIN}/`;
     req.session.destroy(() => {
       res.redirect(logoutUrl);
     });
