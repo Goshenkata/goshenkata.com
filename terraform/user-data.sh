@@ -138,6 +138,7 @@ ${ssm_exports}
 EOF
 chown ec2-user:ec2-user /home/ec2-user/.env
 chmod 600 /home/ec2-user/.env
+echo "=== ENV file loaded ==="
 
 # Load .env file for this session
 set -a
