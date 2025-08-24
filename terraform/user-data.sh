@@ -1,11 +1,11 @@
 #!/bin/bash
-set -e
 echo "=== Starting EC2 Bootstrap Script ==="
 echo "=== Updating system packages ==="
 dnf update -y
 
 echo "=== Installing required packages ==="
-dnf install -y nodejs npm git nginx openssl ruby wget
+dnf install -y ruby
+dnf install -y nodejs npm git nginx openssl wget
 
 echo "=== Installing CodeDeploy agent ==="
 cd /home/ec2-user
