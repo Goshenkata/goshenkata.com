@@ -6,6 +6,7 @@ import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import checkAuth from './middleware/checkAuth.js';
 import authRoutes from './routes/auth.js';
+import { callBackUri } from './routes/auth.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -20,7 +21,7 @@ async function initializeClient() {
         client = new issuer.Client({
                 client_id: process.env.COGNITO_CLIENT_ID,
                 client_secret: process.env.COGNITO_CLIENT_SECRET,
-                redirect_uris: [`https://${process.env.DOMAIN}/callback`],
+                redirect_uris: [callBackUri],
                 response_types: ['code']
         });
 }

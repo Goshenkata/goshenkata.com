@@ -1,6 +1,14 @@
 import { Router } from 'express';
 import { generators } from 'openid-client';
 
+export const callBackUri = process.env.NODE_ENV === 'production'
+        ? `https://${process.env.DOMAIN}/callback`
+        : 'http://localhost:3000/callback';
+
+export const logoutUri = process.env.NODE_ENV === 'production'
+      ? `https://${process.env.DOMAIN}/`
+      : 'http://localhost:3000/';
+
 export default function (client) {
   const router = Router();
 
@@ -19,9 +27,6 @@ export default function (client) {
 
   router.get('/callback', async (req, res) => {
     try {
-      const callBackUri = process.env.NODE_ENV === 'production'
-        ? `https://${process.env.DOMAIN}/callback`
-        : 'http://localhost:3000/callback';
       const params = client.callbackParams(req);
       const tokenSet = await client.callback(
         callBackUri,
@@ -42,9 +47,6 @@ export default function (client) {
 
   router.get('/logout', (req, res) => {
     // Determine logout URI based on environment
-    const logoutUri = process.env.NODE_ENV === 'production'
-      ? `https://${process.env.DOMAIN}/`
-      : 'http://localhost:3000/';
     const logoutUrl = `https://eu-central-1vg1ozzrl0.auth.eu-central-1.amazoncognito.com/logout?client_id=${process.env.COGNITO_CLIENT_ID}&logout_uri=${encodeURIComponent(logoutUri)}`;
     req.session.destroy(() => {
       res.redirect(logoutUrl);
