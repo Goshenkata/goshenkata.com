@@ -37,6 +37,15 @@ Resources:
           Properties:
             Path: /
             Method: POST
+            ApiKeyRequired: true
+  GoshenkataApiKey:
+    Type: AWS::ApiGateway::ApiKey
+    Properties:
+      Name: goshenkata-api-key
+      Enabled: true
+      StageKeys:
+        - RestApiId: !Ref ServerlessRestApi
+          StageName: Prod
   DiaryTable:
     Type: AWS::Serverless::SimpleTable
     Properties:
