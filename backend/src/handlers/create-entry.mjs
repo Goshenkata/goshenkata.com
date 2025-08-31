@@ -3,14 +3,15 @@ import { DynamoDBDocumentClient, PutCommand } from '@aws-sdk/lib-dynamodb';
 import { authorizeUser } from '../utils/authorize-user.mjs';
 import { v4 as uuidv4 } from 'uuid';
 
-const client = new DynamoDBClient({});
-const ddbDocClient = DynamoDBDocumentClient.from(client);
-const tableName = process.env.DIARY_TABLE;
+
+export const client = new DynamoDBClient({});
+export const ddbDocClient = DynamoDBDocumentClient.from(client);
 
 /**
  * A simple example includes a HTTP post method to add one item to a DynamoDB table.
  */
 export const createEntryHandler = async (event) => {
+    const tableName = process.env.DIARY_TABLE;
     console.log('Received event:', JSON.stringify(event, null, 2));
     if (!authorizeUser(event)) {
         return {

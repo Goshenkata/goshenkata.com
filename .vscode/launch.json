@@ -8,7 +8,17 @@
                 "<node_internals>/**"
             ],
             "type": "node"
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Jest Backend Tests",
+            "cwd": "${workspaceFolder}/backend",
+            "runtimeExecutable": "/home/goshenkata/.nvm/versions/node/v22.17.1/bin/npm",
+            "runtimeArgs": [
+                "test"
+            ],
+            "console": "integratedTerminal"
         }
-
     ]
 }
