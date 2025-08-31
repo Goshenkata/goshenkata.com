@@ -1,0 +1,12 @@
+{
+    "httpMethod": "POST",
+    "body": "{\"date\": \"2026-08-31\", \"text\": \"My diary entry text\", \"images\": [\"images/img1.jpg\"], \"videos\": [\"videos/vid1.mp4\"]}",
+    "requestContext": {
+        "authorizer": {
+            "claims": {
+                "sub": "test-user-id",
+                "email": "goshenkataklev@gmail.com"
+            }
+        }
+    }
+}
