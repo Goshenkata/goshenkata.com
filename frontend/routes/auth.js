@@ -37,8 +37,10 @@ export default function (client) {
         },
       );
       const userInfo = await client.userinfo(tokenSet.access_token);
-      req.session.userInfo = userInfo;
-      res.redirect('/');
+  req.session.userInfo = userInfo;
+  req.session.idToken = tokenSet.id_token;
+  req.session.accessToken = tokenSet.access_token;
+  res.redirect('/');
     } catch (err) {
       console.error('Callback error:', err);
       res.redirect('/');

@@ -13,7 +13,11 @@ export const ddbDocClient = DynamoDBDocumentClient.from(client);
 export const createEntryHandler = async (event) => {
     const tableName = process.env.DIARY_TABLE;
     console.log('Received event:', JSON.stringify(event, null, 2));
-    if (!authorizeUser(event)) {
+    const claims = event.requestContext?.authorizer?.claims;
+    console.log('Auth claims:', claims);
+    const isAuthorized = authorizeUser(event);
+    console.log('authorizeUser result:', isAuthorized);
+    if (!isAuthorized) {
         return {
             statusCode: 403,
             body: JSON.stringify({ message: "Forbidden" }),

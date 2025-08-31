@@ -20,9 +20,18 @@
         <% } %>
     <p class="mt-5">Let's all love lain!</p>
         <p>is authenticated: <%= isAuthenticated ? 'yes' : 'no' %></p>
-        <% if (userInfo) { %>
+        <% if (isAuthenticated) { %>
             <pre class="bg-secondary text-light p-3 rounded mt-3"><%= JSON.stringify(userInfo, null, 2) %></pre>
+            <div class="mt-2">
+                <small>ID Token:</small>
+                <pre><%= idToken %></pre>
+            </div>
+            <div class="mt-2">
+                <small>Access Token:</small>
+                <pre><%= accessToken %></pre>
+            </div>
         <% } %>
+
 </body>
 
 </html>

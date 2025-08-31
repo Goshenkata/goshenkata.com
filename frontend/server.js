@@ -42,7 +42,9 @@ app.set('view engine', 'ejs');
 app.get('/', checkAuth, (req, res) => {
         res.render('index', {
                 isAuthenticated: req.isAuthenticated,
-                userInfo: req.session.userInfo || null
+                userInfo: req.session.userInfo || null,
+                idToken: req.session.idToken || null,
+                accessToken: req.session.accessToken || null
         });
 });
 
