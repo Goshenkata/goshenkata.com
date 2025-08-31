@@ -37,7 +37,8 @@ Resources:
           Properties:
             Path: /
             Method: POST
-            ApiKeyRequired: true
+            Auth:
+              ApiKeyRequired: true
   GoshenkataApiKey:
     Type: AWS::ApiGateway::ApiKey
     Properties:
