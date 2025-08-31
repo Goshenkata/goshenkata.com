@@ -3,9 +3,8 @@ import { DynamoDBDocumentClient, PutCommand } from '@aws-sdk/lib-dynamodb';
 import { authorizeUser } from '../utils/authorize-user.mjs';
 import { v4 as uuidv4 } from 'uuid';
 
-
-export const client = new DynamoDBClient({});
-export const ddbDocClient = DynamoDBDocumentClient.from(client);
+const client = new DynamoDBClient({});
+const ddbDocClient = DynamoDBDocumentClient.from(client);
 
 /**
  * A simple example includes a HTTP post method to add one item to a DynamoDB table.
@@ -13,21 +12,17 @@ export const ddbDocClient = DynamoDBDocumentClient.from(client);
 export const createEntryHandler = async (event) => {
     const tableName = process.env.DIARY_TABLE;
     console.log('Received event:', JSON.stringify(event, null, 2));
-    const claims = event.requestContext?.authorizer?.claims;
-    console.log('Auth claims:', claims);
-    const isAuthorized = authorizeUser(event);
-    console.log('authorizeUser result:', isAuthorized);
-    if (!isAuthorized) {
+    if (!authorizeUser(event)) {
         return {
             statusCode: 403,
-            body: JSON.stringify({ message: "Forbidden" }),
+            body: JSON.stringify({ message: "Forbidden, begone!" }),
         };
     }
 
     if (event.httpMethod !== 'POST') {
         return {
             statusCode: 405,
-            body: JSON.stringify({ message: `Method Not Allowed: ${event.httpMethod}` }),
+            body: JSON.stringify({ message: `Only POST pls: ${event.httpMethod}` }),
         };
     }
 
@@ -37,7 +32,7 @@ export const createEntryHandler = async (event) => {
     } catch (err) {
         return {
             statusCode: 400,
-            body: JSON.stringify({ message: 'Invalid JSON body' }),
+            body: JSON.stringify({ message: 'JSON broke' }),
         };
     }
 
