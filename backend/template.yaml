@@ -37,16 +37,6 @@ Resources:
           Properties:
             Path: /
             Method: POST
-            Auth:
-              ApiKeyRequired: true
-  GoshenkataApiKey:
-    Type: AWS::ApiGateway::ApiKey
-    Properties:
-      Name: goshenkata-api-key
-      Enabled: true
-      StageKeys:
-        - RestApiId: !Ref ServerlessRestApi
-          StageName: Prod
   DiaryTable:
     Type: AWS::Serverless::SimpleTable
     Properties:
@@ -56,25 +46,6 @@ Resources:
       ProvisionedThroughput:
         ReadCapacityUnits: 4
         WriteCapacityUnits: 4
-  GoshenkataUsagePlan:
-    Type: AWS::ApiGateway::UsagePlan
-    Properties:
-      UsagePlanName: goshenkata-usage-plan
-      ApiStages:
-        - ApiId: !Ref ServerlessRestApi
-          Stage: Prod
-      Description: Usage plan for goshenkata API
-      Throttle:
-        BurstLimit: 100
-        RateLimit: 50
-
-  GoshenkataUsagePlanKey:
-    Type: AWS::ApiGateway::UsagePlanKey
-    Properties:
-      KeyId: !Ref GoshenkataApiKey
-      KeyType: API_KEY
-      UsagePlanId: !Ref GoshenkataUsagePlan
-
 Outputs:
   WebEndpoint:
     Description: "API Gateway endpoint URL for Prod stage"
