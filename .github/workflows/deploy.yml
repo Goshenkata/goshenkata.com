@@ -103,7 +103,7 @@ jobs:
 
     - name: Npm Test
       working-directory: backend
-      run: npm test
+      run: npm install; npm test
 
     - name: SAM Deploy
       working-directory: backend
