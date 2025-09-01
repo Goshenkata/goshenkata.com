@@ -18,7 +18,7 @@ export default function (client) {
     req.session.nonce = nonce;
     req.session.state = state;
     const authUrl = client.authorizationUrl({
-      scope: 'email openid phone',
+      scope: 'email openid',
       state: state,
       nonce: nonce,
     });
