@@ -102,6 +102,7 @@ jobs:
       run: sam build --use-container
 
     - name: Npm Test
+      working-directory: backend
       run: npm test
 
     - name: SAM Deploy
