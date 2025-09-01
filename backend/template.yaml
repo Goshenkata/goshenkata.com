@@ -64,7 +64,7 @@ Resources:
         - ApiId: !Ref ServerlessRestApi
           Stage: Prod
       Description: Usage plan for goshenkata API
-      UsagePlanThrottle:
+      Throttle:
         BurstLimit: 100
         RateLimit: 50
 
