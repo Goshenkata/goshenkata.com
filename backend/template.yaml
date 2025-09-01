@@ -56,6 +56,24 @@ Resources:
       ProvisionedThroughput:
         ReadCapacityUnits: 4
         WriteCapacityUnits: 4
+  GoshenkataUsagePlan:
+    Type: AWS::ApiGateway::UsagePlan
+    Properties:
+      UsagePlanName: goshenkata-usage-plan
+      ApiStages:
+        - ApiId: !Ref ServerlessRestApi
+          Stage: Prod
+      Description: Usage plan for goshenkata API
+      UsagePlanThrottle:
+        BurstLimit: 100
+        RateLimit: 50
+
+  GoshenkataUsagePlanKey:
+    Type: AWS::ApiGateway::UsagePlanKey
+    Properties:
+      KeyId: !Ref GoshenkataApiKey
+      KeyType: API_KEY
+      UsagePlanId: !Ref GoshenkataUsagePlan
 
 Outputs:
   WebEndpoint:
