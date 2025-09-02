@@ -46,6 +46,13 @@ Resources:
       ProvisionedThroughput:
         ReadCapacityUnits: 4
         WriteCapacityUnits: 4
+  ApiGatewayUrlParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: /goshenkata/api/url
+      Type: String
+      Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/"
+      Description: "API Gateway endpoint URL for goshenkata backend"
 Outputs:
   WebEndpoint:
     Description: "API Gateway endpoint URL for Prod stage"
