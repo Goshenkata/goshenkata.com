@@ -1,0 +1,12 @@
+{
+  "httpMethod": "GET",
+  "pathParameters": { "date": "2026-08-31" },
+  "requestContext": {
+    "authorizer": {
+      "claims": {
+        "sub": "test-user-id",
+        "email": "goshenkataklev@gmail.com"
+      }
+    }
+  }
+}

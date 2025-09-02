@@ -35,8 +35,31 @@ Resources:
         Api:
           Type: Api
           Properties:
-            Path: /
+            Path: /entry
             Method: POST
+  getEntryFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: src/handlers/get-entry.getEntryHandler
+      Runtime: nodejs22.x
+      Architectures:
+        - x86_64
+      MemorySize: 128
+      Timeout: 100
+      Description: Get diary entries for a user by date.
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref DiaryTable
+      Environment:
+        Variables:
+          DIARY_TABLE: !Ref DiaryTable
+          ALLOWED_USER_EMAIL: goshenkataklev@gmail.com
+      Events:
+        Api:
+          Type: Api
+          Properties:
+            Path: /entry/{date}
+            Method: GET
   DiaryTable:
     Type: AWS::Serverless::SimpleTable
     Properties:
