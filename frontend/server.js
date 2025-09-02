@@ -62,7 +62,7 @@ app.get('/health', (req, res) => {
 });
 
 // Error handler
-app.use((err, req, res, next) => {
+app.use((err, _req, res, _next) => {
     console.error(err.stack);
     res.status(500).send(err);
 });

@@ -10,27 +10,11 @@
 </head>
 
 <body class="bg-dark text-light">
-    <div
-        class="container min-vh-100 d-flex flex-column justify-content-center align-items-start text-start ps-4 ps-md-5">
-    <h1 class="display-3 fw-semibold mb-4 flicker">Goshenkata.com</h1>
-        <% if (isAuthenticated) { %>
-            <a href="/logout" class="btn btn-danger btn-lg px-5">Logout</a>
-        <% } else { %>
-            <a href="/login" class="btn btn-primary btn-lg px-5">Lain</a>
-        <% } %>
-    <p class="mt-5">Let's all love lain!</p>
-        <p>is authenticated: <%= isAuthenticated ? 'yes' : 'no' %></p>
-        <% if (isAuthenticated) { %>
-            <pre class="bg-secondary text-light p-3 rounded mt-3"><%= JSON.stringify(userInfo, null, 2) %></pre>
-            <div class="mt-2">
-                <small>ID Token:</small>
-                <pre><%= idToken %></pre>
-            </div>
-            <div class="mt-2">
-                <small>Access Token:</small>
-                <pre><%= accessToken %></pre>
-            </div>
-        <% } %>
+        <%- include('partials/navbar') %>
+        <div class="container min-vh-100 d-flex flex-column justify-content-center align-items-start text-start ps-4 ps-md-5">
+            <h1 class="display-3 fw-semibold mb-4 flicker">Goshenkata.com</h1>
+            <p class="mt-5">Let's all love lain!</p>
+            <p>is authenticated: <%= isAuthenticated ? 'yes' : 'no' %></p>
 
 </body>
 
