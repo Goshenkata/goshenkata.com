@@ -95,7 +95,7 @@ Resources:
   ApiGatewayUrlParameter:
     Type: AWS::SSM::Parameter
     Properties:
-      Name: /goshenkata/api/url
+      Name: /goshenkata/BACKEND_API_URL
       Type: String
       Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/"
       Description: "API Gateway endpoint URL for goshenkata backend"
