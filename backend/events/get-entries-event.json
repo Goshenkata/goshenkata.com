@@ -1,0 +1,13 @@
+{
+  "httpMethod": "GET",
+  "path": "/entries",
+  "queryStringParameters": { "page": "0", "size": "10" },
+  "requestContext": {
+    "authorizer": {
+      "claims": {
+        "sub": "test-user-id",
+        "email": "goshenkataklev@gmail.com"
+      }
+    }
+  }
+}

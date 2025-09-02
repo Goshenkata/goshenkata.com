@@ -60,6 +60,29 @@ Resources:
           Properties:
             Path: /entry/{date}
             Method: GET
+  getEntriesFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: src/handlers/get-entries.getEntriesHandler
+      Runtime: nodejs22.x
+      Architectures:
+        - x86_64
+      MemorySize: 128
+      Timeout: 100
+      Description: Get paginated diary entries for a user sorted by date desc.
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref DiaryTable
+      Environment:
+        Variables:
+          DIARY_TABLE: !Ref DiaryTable
+          ALLOWED_USER_EMAIL: goshenkataklev@gmail.com
+      Events:
+        Api:
+          Type: Api
+          Properties:
+            Path: /entries
+            Method: GET
   DiaryTable:
     Type: AWS::Serverless::SimpleTable
     Properties:
