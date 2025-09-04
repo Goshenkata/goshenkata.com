@@ -1,4 +1,3 @@
-
 import express from 'express';
 import session from 'express-session';
 import { Issuer } from 'openid-client';
@@ -9,9 +8,12 @@ import authRoutes from './routes/auth.js';
 import { callBackUri } from './routes/auth.js';
 import attachAuthHeader from './middleware/attachAuthHeader.js';
 import fetch from 'node-fetch';
+import dotenv from 'dotenv';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
+
+dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -38,6 +40,7 @@ app.use(session({
 
 app.use(express.static(join(__dirname, 'static')));
 app.use(express.json());
+app.set('views', join(__dirname, 'views'));
 app.set('view engine', 'ejs');
 app.use(attachAuthHeader);
 

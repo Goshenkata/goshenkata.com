@@ -19,7 +19,7 @@
       const res = await fetch(`/api/entries?page=${page}&size=${size}`);
       if (!res.ok) throw new Error('Failed to load entries');
       const data = await res.json();
-      const items = data.items || data || [];
+      const items = data.entries || [];
       if (!items.length) {
         done = true;
         endEl.classList.remove('d-none');
