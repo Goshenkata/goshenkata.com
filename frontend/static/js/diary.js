@@ -18,10 +18,12 @@
   function getDateGroup(date) {
     if (!dateGroups[date]) {
       const wrapper = document.createElement('div');
-      wrapper.className = 'date-group mb-4';
+      wrapper.className = 'date-group';
       wrapper.setAttribute('data-date', date);
-      wrapper.innerHTML = `\n        <div class="date-header py-2 px-3 mb-2 rounded fw-semibold">${date}</div>\n        <div class="date-entries row g-3"></div>`;
-      dateGroups[date] = { wrapper, list: wrapper.querySelector('.date-entries') };
+      wrapper.innerHTML = `\n        <div class="date-label-wrap">\n          <div class="date-label">${date}<span class="date-count" data-count>0</span></div>\n        </div>\n        <span class="divider-fade"></span>\n        <div class="date-entries"></div>`;
+      const list = wrapper.querySelector('.date-entries');
+      const countEl = wrapper.querySelector('[data-count]');
+      dateGroups[date] = { wrapper, list, countEl, count:0 };
       entriesEl.appendChild(wrapper);
     }
     return dateGroups[date];
@@ -53,12 +55,13 @@
 
   function addEntryCard(entry) {
     const date = entry.date || entry.Date || entry.createdAt || 'Unknown';
-    const group = getDateGroup(date);
-    const col = document.createElement('div');
-    col.className = 'col-12';
+  const group = getDateGroup(date);
+  const col = document.createElement('div');
     const text = entry.text || entry.Text || '';
-    col.innerHTML = `\n      <div class="p-3 rounded entry-card h-100">\n        <pre class="mb-0">${escapeHtml(text)}</pre>\n      </div>`;
-    group.list.appendChild(col);
+  col.innerHTML = `\n      <div class="entry-card">\n        <pre>${escapeHtml(text)}</pre>\n      </div>`;
+  group.list.appendChild(col);
+  group.count += 1;
+  group.countEl.textContent = group.count;
   }
 
   function escapeHtml(str) {
