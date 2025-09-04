@@ -1,8 +1,9 @@
+/** Diary page client logic with date-grouped rendering */
 (function(){
-  let page = 0;
-  const size = 10;
-  let loading = false;
-  let done = false;
+  let page = 0;               // current page index
+  const size = 10;            // page size
+  let loading = false;        // loading flag
+  let done = false;           // no more pages
 
   const root = document.getElementById('diary-root');
   if(!root) return;
@@ -10,6 +11,21 @@
   const loadingEl = document.getElementById('loading');
   const endEl = document.getElementById('endOfList');
   const backendApiUrl = root.getAttribute('data-backend-url') || '';
+
+  // Keep created date group containers
+  const dateGroups = {}; // date -> { wrapper, list }
+
+  function getDateGroup(date) {
+    if (!dateGroups[date]) {
+      const wrapper = document.createElement('div');
+      wrapper.className = 'date-group mb-4';
+      wrapper.setAttribute('data-date', date);
+      wrapper.innerHTML = `\n        <div class="date-header py-2 px-3 mb-2 rounded fw-semibold">${date}</div>\n        <div class="date-entries row g-3"></div>`;
+      dateGroups[date] = { wrapper, list: wrapper.querySelector('.date-entries') };
+      entriesEl.appendChild(wrapper);
+    }
+    return dateGroups[date];
+  }
 
   async function fetchEntries() {
     if (loading || done) return;
@@ -36,12 +52,13 @@
   }
 
   function addEntryCard(entry) {
+    const date = entry.date || entry.Date || entry.createdAt || 'Unknown';
+    const group = getDateGroup(date);
     const col = document.createElement('div');
     col.className = 'col-12';
-    const date = entry.date || entry.Date || entry.createdAt || 'Unknown';
     const text = entry.text || entry.Text || '';
-    col.innerHTML = `\n      <div class="p-3 rounded entry-card">\n        <div class="d-flex justify-content-between align-items-center mb-2">\n          <h5 class="mb-0">${date}</h5>\n        </div>\n        <pre class="mb-0">${escapeHtml(text)}</pre>\n      </div>`;
-    entriesEl.appendChild(col);
+    col.innerHTML = `\n      <div class="p-3 rounded entry-card h-100">\n        <pre class="mb-0">${escapeHtml(text)}</pre>\n      </div>`;
+    group.list.appendChild(col);
   }
 
   function escapeHtml(str) {
@@ -91,7 +108,9 @@
         body: JSON.stringify(payload)
       });
       if (!res.ok) throw new Error('Failed to create entry');
-      entriesEl.innerHTML = '';
+  // Reset UI & cache for fresh load
+  entriesEl.innerHTML = '';
+  Object.keys(dateGroups).forEach(k => delete dateGroups[k]);
       page = 0; done = false; endEl.classList.add('d-none');
       if (modal) modal.hide();
       fetchEntries();
