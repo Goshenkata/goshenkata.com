@@ -7,6 +7,8 @@ import { dirname, join } from 'path';
 import checkAuth from './middleware/checkAuth.js';
 import authRoutes from './routes/auth.js';
 import { callBackUri } from './routes/auth.js';
+import attachAuthHeader from './middleware/attachAuthHeader.js';
+import fetch from 'node-fetch';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -37,6 +39,7 @@ app.use(session({
 app.use(express.static(join(__dirname, 'static')));
 app.use(express.json());
 app.set('view engine', 'ejs');
+app.use(attachAuthHeader);
 
 // Home route
 app.get('/', checkAuth, (req, res) => {
@@ -52,6 +55,40 @@ app.get('/profile', checkAuth, (req, res) => {
                 idToken: req.session.idToken || null,
                 accessToken: req.session.accessToken || null
         });
+});
+
+// Diary page (authenticated only)
+app.get('/diary', checkAuth, (req, res) => {
+        if (!req.isAuthenticated) return res.redirect('/');
+        res.render('diary', { isAuthenticated: true, backendApiUrl: process.env.BACKEND_API_URL || '' });
+});
+
+// Proxy API routes to backend adding Authorization header if available
+app.get('/api/entries', async (req, res) => {
+        if (!req.isAuthenticated) return res.status(401).json({ message: 'Unauthorized' });
+        const { page = 0, size = 10 } = req.query;
+        try {
+                const url = `${process.env.BACKEND_API_URL}entries?page=${encodeURIComponent(page)}&size=${encodeURIComponent(size)}`;
+                const r = await fetch(url, { headers: req.authHeaders });
+                const data = await r.json().catch(() => ({}));
+                res.status(r.status).json(data);
+        } catch (e) {
+                console.error(e);
+                res.status(500).json({ message: 'Error fetching entries' });
+        }
+});
+
+app.post('/api/entry', async (req, res) => {
+        if (!req.isAuthenticated) return res.status(401).json({ message: 'Unauthorized' });
+        try {
+                const url = `${process.env.BACKEND_API_URL}entry`;
+                const r = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json', ...req.authHeaders }, body: JSON.stringify(req.body) });
+                const data = await r.json().catch(() => ({}));
+                res.status(r.status).json(data);
+        } catch (e) {
+                console.error(e);
+                res.status(500).json({ message: 'Error creating entry' });
+        }
 });
 
 // Auth routes
