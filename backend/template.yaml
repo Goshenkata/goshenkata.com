@@ -83,6 +83,29 @@ Resources:
           Properties:
             Path: /entries
             Method: GET
+  generateUploadUrlFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: src/handlers/generate-upload-url.getUploadUrlHandler
+      Runtime: nodejs22.x
+      Architectures:
+        - x86_64
+      MemorySize: 128
+      Timeout: 30
+      Description: Generate pre-signed S3 upload URLs for authenticated users.
+      Policies:
+        - S3WritePolicy:
+            BucketName: !Ref UploadsBucket
+      Environment:
+        Variables:
+          UPLOAD_BUCKET: !Ref UploadsBucket
+          ALLOWED_USER_EMAIL: goshenkataklev@gmail.com
+      Events:
+        Api:
+          Type: Api
+          Properties:
+            Path: /upload-url
+            Method: POST
   DiaryTable:
     Type: AWS::Serverless::SimpleTable
     Properties:
@@ -92,6 +115,17 @@ Resources:
       ProvisionedThroughput:
         ReadCapacityUnits: 4
         WriteCapacityUnits: 4
+  UploadsBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      OwnershipControls:
+        Rules:
+          - ObjectOwnership: BucketOwnerPreferred
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
   ApiGatewayUrlParameter:
     Type: AWS::SSM::Parameter
     Properties:
