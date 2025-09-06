@@ -50,6 +50,7 @@ import { Uploader, UploadUI } from './uploader.js';
       }
     } catch (e) {
       console.error(e);
+      if (window.__toast) window.__toast('Could not load entries', { title: 'Error', variant: 'danger' });
     } finally {
       loading = false;
       loadingEl.classList.add('d-none');
@@ -90,7 +91,7 @@ import { Uploader, UploadUI } from './uploader.js';
   const uploader = new Uploader(imagesInput, videosInput, {
     showProgress: (name) => { imagesUI.showProgress(name); },
     markDone: (name) => { imagesUI.markDone(name); videosUI.markDone(name); },
-    warn: (msg) => alert(msg)
+  warn: (msg) => { if (window.__toast) window.__toast(msg, { title: 'Upload', variant: 'danger' }); else alert(msg); }
   });
 
   function today() {
@@ -135,7 +136,8 @@ import { Uploader, UploadUI } from './uploader.js';
       dateInput.value = today();
     } catch (err) {
       console.error(err);
-      alert('Error saving entry or uploading files');
+      if (window.__toast) window.__toast('Error saving entry or uploading files', { title: 'Diary', variant: 'danger' });
+      else alert('Error saving entry or uploading files');
     }
   });
 })();

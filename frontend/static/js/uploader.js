@@ -57,6 +57,7 @@ export class UploadUI {
         if (row) row.innerHTML = `<span class="text-success small">✔ Uploaded ${name}</span>`;
     }
     warn(msg) {
-        alert(msg);
+        if (window.__toast) window.__toast(msg, { title: 'Upload', variant: 'danger' });
+        else alert(msg);
     }
 }

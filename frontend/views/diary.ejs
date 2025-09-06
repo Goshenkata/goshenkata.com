@@ -36,6 +36,7 @@
 </head>
 <body class="bg-dark text-light">
   <%- include('partials/navbar') %>
+  <%- include('partials/toast') %>
   <div class="container py-4" id="diary-root" data-backend-url="<%= backendApiUrl %>">
     <div class="d-flex align-items-center mb-3">
       <h1 class="me-3 mb-0">Diary</h1>
@@ -90,6 +91,10 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script type="module">
+    import { showToast } from '/js/toast.js';
+    window.__toast = showToast;
+  </script>
   <script type="module" src="/js/diary.js"></script>
 </body>
 </html>
