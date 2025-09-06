@@ -126,6 +126,21 @@ Resources:
         BlockPublicPolicy: true
         IgnorePublicAcls: true
         RestrictPublicBuckets: true
+      CorsConfiguration:
+        CorsRules:
+          - AllowedOrigins:
+              - https://goshenkata.com
+              - http://localhost:3000
+              - http://0.0.0.0:3000
+            AllowedMethods:
+              - PUT
+              - GET
+              - HEAD
+            AllowedHeaders:
+              - '*'
+            ExposedHeaders:
+              - ETag
+            MaxAge: 3000
   ApiGatewayUrlParameter:
     Type: AWS::SSM::Parameter
     Properties:
