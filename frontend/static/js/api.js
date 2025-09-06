@@ -8,15 +8,28 @@ export async function createEntry(payload) {
 }
 
 export async function getUploadUrl(filename, contentType) {
-  const res = await fetch('/api/upload-url', {
-    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ filename, contentType })
-  });
-  if (!res.ok) throw new Error(`Get upload URL failed (${res.status})`);
-  return res.json();
+    console.log(`[API] Requesting presigned URL for ${filename} (${contentType})`);
+    const res = await fetch('/api/upload-url', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ filename, contentType })
+    });
+    const data = await res.json();
+    console.log(`[API] Received presigned URL for ${filename}:`, data);
+    return data;
 }
 
-export async function putToS3(url, file, headers) {
-  const res = await fetch(url, { method: 'PUT', headers, body: file });
-  if (!res.ok) throw new Error(`S3 upload failed (${res.status})`);
-  return true;
+export async function putToS3(url, file, headers = {}) {
+    console.log(`[API] Uploading file to S3: ${file.name}, url: ${url}`);
+    const res = await fetch(url, {
+        method: 'PUT',
+        headers,
+        body: file
+    });
+    if (!res.ok) {
+        console.error(`[API] S3 upload failed for ${file.name}:`, res.status, await res.text());
+        throw new Error(`S3 upload failed for ${file.name}: ${res.status}`);
+    }
+    console.log(`[API] S3 upload succeeded for ${file.name}`);
+    return res;
 }

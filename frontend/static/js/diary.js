@@ -85,9 +85,27 @@ import { Uploader, UploadUI } from './uploader.js';
   const videosInput = document.getElementById('videos');
   const imagesPreview = document.getElementById('imagesPreview');
   const videosPreview = document.getElementById('videosPreview');
-  const uploadUI = new UploadUI(document.createElement('div'));
   const imagesUI = new UploadUI(imagesPreview);
   const videosUI = new UploadUI(videosPreview);
+  let selectedImages = [];
+  let selectedVideos = [];
+  // Render thumbnails on selection
+  function renderAllThumbs() {
+    imagesUI.clearSelected?.();
+    videosUI.clearSelected?.();
+    selectedImages.forEach(f => imagesUI.addSelected?.(f, 'image'));
+    selectedVideos.forEach(f => videosUI.addSelected?.(f, 'video'));
+  }
+  imagesInput?.addEventListener('change', () => {
+    const files = Array.from(imagesInput.files || []);
+    selectedImages = selectedImages.concat(files);
+    renderAllThumbs();
+  });
+  videosInput?.addEventListener('change', () => {
+    const files = Array.from(videosInput.files || []);
+    selectedVideos = selectedVideos.concat(files);
+    renderAllThumbs();
+  });
   const uploader = new Uploader(imagesInput, videosInput, {
     showProgress: (name) => { imagesUI.showProgress(name); },
     markDone: (name) => { imagesUI.markDone(name); videosUI.markDone(name); },
@@ -114,19 +132,28 @@ import { Uploader, UploadUI } from './uploader.js';
 
   if (entryForm) entryForm.addEventListener('submit', async (e) => {
     e.preventDefault();
-    // 1) Save entry first
-    const payload = {
-      date: dateInput.value,
-      text: document.getElementById('text').value,
-      images: [],
-      videos: []
-    };
     try {
+      // Disable submit button during requests
+      const submitBtn = entryForm.querySelector('button[type="submit"]');
+      submitBtn && (submitBtn.disabled = true);
+  // 1) Upload files first and gather S3 object KEYS
+  uploader.setFiles(selectedImages, selectedVideos);
+  const results = await uploader.uploadAll();
+  const imageKeys = (results.images || []).map(i => i.key).filter(Boolean);
+  const videoKeys = (results.videos || []).map(v => v.key).filter(Boolean);
+  console.log('[Diary] Uploads complete, creating entry with KEYS', { imageCount: imageKeys.length, videoCount: videoKeys.length });
+
+      // 2) Create entry with uploaded URLs
+      const payload = {
+        date: dateInput.value,
+        text: document.getElementById('text').value,
+        images: imageKeys,
+        videos: videoKeys
+      };
       const created = await createEntry(payload);
-      // 2) Upload files (images/videos) with progress UI
-      const results = await uploader.uploadAll();
-      // Note: keys available in results to later associate or display
-      // Reset UI & cache for fresh load
+      console.log('[Diary] Entry created', created);
+
+      // 3) Reset UI & reload entries
       entriesEl.innerHTML = '';
       Object.keys(dateGroups).forEach(k => delete dateGroups[k]);
       page = 0; done = false; endEl.classList.add('d-none');
@@ -134,10 +161,17 @@ import { Uploader, UploadUI } from './uploader.js';
       fetchEntries();
       entryForm.reset();
       dateInput.value = today();
+  selectedImages = [];
+  selectedVideos = [];
+  renderAllThumbs();
+      if (window.__toast) window.__toast('Entry saved', { title: 'Diary', variant: 'success' });
     } catch (err) {
       console.error(err);
-      if (window.__toast) window.__toast('Error saving entry or uploading files', { title: 'Diary', variant: 'danger' });
-      else alert('Error saving entry or uploading files');
+      if (window.__toast) window.__toast('Error uploading files or saving entry', { title: 'Diary', variant: 'danger' });
+      else alert('Error uploading files or saving entry');
+    } finally {
+      const submitBtn = entryForm.querySelector('button[type="submit"]');
+      submitBtn && (submitBtn.disabled = false);
     }
   });
 })();

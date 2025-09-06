@@ -44,6 +44,12 @@ app.set('views', join(__dirname, 'views'));
 app.set('view engine', 'ejs');
 app.use(attachAuthHeader);
 
+
+// Serve favicon.ico from static/img (single route)
+app.get('/favicon.ico', (req, res) => {
+        res.sendFile(join(__dirname, 'static', 'img', 'favicon.ico'));
+});
+
 // Home route
 app.get('/', checkAuth, (req, res) => {
         res.render('index', {
@@ -94,7 +100,7 @@ app.post('/api/entry', async (req, res) => {
         }
 });
 
-// Presigned upload URL
+// Proxy to generate presigned upload URL
 app.post('/api/upload-url', async (req, res) => {
         if (!req.isAuthenticated) return res.status(401).json({ message: 'Unauthorized' });
         try {
@@ -104,12 +110,14 @@ app.post('/api/upload-url', async (req, res) => {
                 res.status(r.status).json(data);
         } catch (e) {
                 console.error(e);
-                res.status(500).json({ message: 'Error getting upload URL' });
+                res.status(500).json({ message: 'Error generating upload URL' });
         }
 });
 
 // Auth routes
 app.use('/', authRoutes(client));
+
+// ...existing code...
 
 // Health check
 app.get('/health', (req, res) => {
