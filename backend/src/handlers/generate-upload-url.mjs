@@ -7,12 +7,6 @@ const s3 = new S3Client({});
 // POST /upload-url -> body: { filename, contentType }
 export const getUploadUrlHandler = async (event) => {
     const bucket = process.env.UPLOAD_BUCKET;
-    console.log(`[generate-upload-url] Incoming request:`, {
-        method: event.httpMethod,
-        path: event.path,
-        user: event.requestContext?.authorizer?.claims?.sub,
-        body: event.body
-    });
 
     if (!authorizeUser(event)) {
         return { statusCode: 403, body: JSON.stringify({ message: 'Forbidden, begone!' }) };

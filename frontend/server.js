@@ -94,6 +94,20 @@ app.post('/api/entry', async (req, res) => {
         }
 });
 
+// Presigned upload URL
+app.post('/api/upload-url', async (req, res) => {
+        if (!req.isAuthenticated) return res.status(401).json({ message: 'Unauthorized' });
+        try {
+                const url = `${process.env.BACKEND_API_URL}upload-url`;
+                const r = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json', ...req.authHeaders }, body: JSON.stringify(req.body) });
+                const data = await r.json().catch(() => ({}));
+                res.status(r.status).json(data);
+        } catch (e) {
+                console.error(e);
+                res.status(500).json({ message: 'Error getting upload URL' });
+        }
+});
+
 // Auth routes
 app.use('/', authRoutes(client));
 

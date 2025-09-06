@@ -1,12 +1,15 @@
-/** Diary page client logic with date-grouped rendering */
-(function(){
+/** Diary page client logic with date-grouped rendering and uploads */
+import { createEntry } from './api.js';
+import { Uploader, UploadUI } from './uploader.js';
+
+(function () {
   let page = 0;               // current page index
   const size = 10;            // page size
   let loading = false;        // loading flag
   let done = false;           // no more pages
 
   const root = document.getElementById('diary-root');
-  if(!root) return;
+  if (!root) return;
   const entriesEl = document.getElementById('entries');
   const loadingEl = document.getElementById('loading');
   const endEl = document.getElementById('endOfList');
@@ -23,7 +26,7 @@
       wrapper.innerHTML = `\n        <div class="date-label-wrap">\n          <div class="date-label">${date}<span class="date-count" data-count>0</span></div>\n        </div>\n        <span class="divider-fade"></span>\n        <div class="date-entries"></div>`;
       const list = wrapper.querySelector('.date-entries');
       const countEl = wrapper.querySelector('[data-count]');
-      dateGroups[date] = { wrapper, list, countEl, count:0 };
+      dateGroups[date] = { wrapper, list, countEl, count: 0 };
       entriesEl.appendChild(wrapper);
     }
     return dateGroups[date];
@@ -55,17 +58,17 @@
 
   function addEntryCard(entry) {
     const date = entry.date || entry.Date || entry.createdAt || 'Unknown';
-  const group = getDateGroup(date);
-  const col = document.createElement('div');
+    const group = getDateGroup(date);
+    const col = document.createElement('div');
     const text = entry.text || entry.Text || '';
-  col.innerHTML = `\n      <div class="entry-card">\n        <pre>${escapeHtml(text)}</pre>\n      </div>`;
-  group.list.appendChild(col);
-  group.count += 1;
-  group.countEl.textContent = group.count;
+    col.innerHTML = `\n      <div class="entry-card">\n        <pre>${escapeHtml(text)}</pre>\n      </div>`;
+    group.list.appendChild(col);
+    group.count += 1;
+    group.countEl.textContent = group.count;
   }
 
   function escapeHtml(str) {
-    return String(str).replace(/[&<>'"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','\'':'&#39;','"':'&quot;'}[c]));
+    return String(str).replace(/[&<>'"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '\'': '&#39;', '"': '&quot;' }[c]));
   }
 
   window.addEventListener('scroll', () => {
@@ -77,11 +80,23 @@
   const newEntryBtn = document.getElementById('newEntryBtn');
   const entryForm = document.getElementById('entryForm');
   const dateInput = document.getElementById('date');
+  const imagesInput = document.getElementById('images');
+  const videosInput = document.getElementById('videos');
+  const imagesPreview = document.getElementById('imagesPreview');
+  const videosPreview = document.getElementById('videosPreview');
+  const uploadUI = new UploadUI(document.createElement('div'));
+  const imagesUI = new UploadUI(imagesPreview);
+  const videosUI = new UploadUI(videosPreview);
+  const uploader = new Uploader(imagesInput, videosInput, {
+    showProgress: (name) => { imagesUI.showProgress(name); },
+    markDone: (name) => { imagesUI.markDone(name); videosUI.markDone(name); },
+    warn: (msg) => alert(msg)
+  });
 
   function today() {
     const d = new Date();
-    const m = String(d.getMonth()+1).padStart(2,'0');
-    const day = String(d.getDate()).padStart(2,'0');
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
     return `${d.getFullYear()}-${m}-${day}`;
   }
   if (dateInput) dateInput.value = today();
@@ -98,6 +113,7 @@
 
   if (entryForm) entryForm.addEventListener('submit', async (e) => {
     e.preventDefault();
+    // 1) Save entry first
     const payload = {
       date: dateInput.value,
       text: document.getElementById('text').value,
@@ -105,23 +121,21 @@
       videos: []
     };
     try {
-      const res = await fetch('/api/entry', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-      if (!res.ok) throw new Error('Failed to create entry');
-  // Reset UI & cache for fresh load
-  entriesEl.innerHTML = '';
-  Object.keys(dateGroups).forEach(k => delete dateGroups[k]);
+      const created = await createEntry(payload);
+      // 2) Upload files (images/videos) with progress UI
+      const results = await uploader.uploadAll();
+      // Note: keys available in results to later associate or display
+      // Reset UI & cache for fresh load
+      entriesEl.innerHTML = '';
+      Object.keys(dateGroups).forEach(k => delete dateGroups[k]);
       page = 0; done = false; endEl.classList.add('d-none');
       if (modal) modal.hide();
       fetchEntries();
       entryForm.reset();
       dateInput.value = today();
-    } catch(err) {
+    } catch (err) {
       console.error(err);
-      alert('Error creating entry');
+      alert('Error saving entry or uploading files');
     }
   });
 })();
