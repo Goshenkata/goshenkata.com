@@ -106,6 +106,29 @@ Resources:
           Properties:
             Path: /upload-url
             Method: POST
+  generateAccessUrlFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: src/handlers/generate-access-url.getAccessUrlHandler
+      Runtime: nodejs22.x
+      Architectures:
+        - x86_64
+      MemorySize: 128
+      Timeout: 30
+      Description: Generate pre-signed S3 GET URLs for authenticated users (owner-only).
+      Policies:
+        - S3ReadPolicy:
+            BucketName: !Ref UploadsBucket
+      Environment:
+        Variables:
+          UPLOAD_BUCKET: !Ref UploadsBucket
+          ALLOWED_USER_EMAIL: goshenkataklev@gmail.com
+      Events:
+        Api:
+          Type: Api
+          Properties:
+            Path: /access-url
+            Method: POST
   DiaryTable:
     Type: AWS::Serverless::SimpleTable
     Properties:
