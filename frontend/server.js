@@ -104,7 +104,7 @@ app.post('/api/entry', async (req, res) => {
 app.delete('/api/entry/:id', async (req, res) => {
         if (!req.isAuthenticated) return res.status(401).json({ message: 'Unauthorized' });
         try {
-                const url = `${process.env.BACKEND_API_URL}entry/${encodeURIComponent(req.params.id)}`;
+                const url = `${process.env.BACKEND_API_URL}entries/${encodeURIComponent(req.params.id)}`;
                 const r = await fetch(url, { method: 'DELETE', headers: { ...req.authHeaders } });
                 const data = await r.json().catch(() => ({}));
                 res.status(r.status).json(data);

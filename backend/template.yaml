@@ -37,7 +37,7 @@ Resources:
         Api:
           Type: Api
           Properties:
-            Path: /entry/{id}
+            Path: /entries/{id}
             Method: DELETE
   createEntryFunction:
     Type: AWS::Serverless::Function
