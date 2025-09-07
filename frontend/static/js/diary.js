@@ -63,16 +63,20 @@ import { Uploader, UploadUI } from './uploader.js';
     const col = document.createElement('div');
     const text = entry.text || entry.Text || '';
       const images = entry.images || entry.Images || [];
+      const videos = entry.videos || entry.Videos || [];
       const entryId = entry.entryId || entry.id || Math.random().toString(36).slice(2);
       const gridId = `thumbs-${entryId}`;
+      const gridVidId = `vids-${entryId}`;
       col.innerHTML = `
         <div class="entry-card" data-entry-id="${entryId}" style="cursor:pointer">
           <div class="d-flex justify-content-end mb-2">
             <button class="btn btn-sm btn-outline-danger" data-role="delete-entry" title="Delete entry">✖</button>
           </div>
           <pre class="mb-2">${escapeHtml(text)}</pre>
-          ${images.length ? `<button class="btn btn-sm btn-outline-light" data-toggle="thumbs" data-target="${gridId}">Show images (${images.length})</button>` : ''}
+          ${images.length ? `<button class="btn btn-sm btn-outline-light me-2" data-toggle="thumbs" data-target="${gridId}">Show images (${images.length})</button>` : ''}
+          ${videos.length ? `<button class="btn btn-sm btn-outline-light" data-toggle="vids" data-target="${gridVidId}">Show videos (${videos.length})</button>` : ''}
           <div id="${gridId}" class="thumb-grid mt-2 d-none"></div>
+          <div id="${gridVidId}" class="thumb-grid mt-2 d-none"></div>
         </div>`;
       // Card click -> navigate to entry page (ignore clicks on internal buttons)
       const card = col.querySelector('.entry-card');
@@ -140,6 +144,40 @@ import { Uploader, UploadUI } from './uploader.js';
           }
           grid.classList.toggle('d-none');
           btn.textContent = grid.classList.contains('d-none') ? `Show images (${images.length})` : 'Hide images';
+        });
+      }
+      if (videos.length) {
+        const vbtn = col.querySelector('[data-toggle="vids"]');
+        const vgrid = col.querySelector(`#${CSS.escape(gridVidId)}`);
+        vbtn.addEventListener('click', async () => {
+          const isHidden = vgrid.classList.contains('d-none');
+          if (isHidden && !vgrid.dataset.loaded) {
+            try {
+              const urls = await Promise.all(videos.map(async (key) => {
+                const { url } = await getAccessUrl(key);
+                return { key, url };
+              }));
+              vgrid.innerHTML = '';
+              for (const { key, url } of urls) {
+                const card = document.createElement('div');
+                card.className = 'thumb-card';
+                const video = document.createElement('video');
+                video.className = 'thumb-video';
+                video.src = url;
+                video.muted = true;
+                video.playsInline = true;
+                video.controls = true;
+                card.appendChild(video);
+                vgrid.appendChild(card);
+              }
+              vgrid.dataset.loaded = '1';
+            } catch (err) {
+              console.error(err);
+              window.__toast && window.__toast('Failed to load videos', { title: 'Entry', variant: 'danger' });
+            }
+          }
+          vgrid.classList.toggle('d-none');
+          vbtn.textContent = vgrid.classList.contains('d-none') ? `Show videos (${videos.length})` : 'Hide videos';
         });
       }
     group.list.appendChild(col);
