@@ -24,10 +24,10 @@ Resources:
       Timeout: 60
       Description: Delete an entry and its S3 attachments (owner-only)
       Policies:
+        - S3CrudPolicy:
+            BucketName: !Ref UploadsBucket
         - DynamoDBCrudPolicy:
             TableName: !Ref DiaryTable
-        - S3WritePolicy:
-            BucketName: !Ref UploadsBucket
       Environment:
         Variables:
           DIARY_TABLE: !Ref DiaryTable
