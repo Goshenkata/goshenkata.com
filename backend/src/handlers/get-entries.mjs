@@ -5,7 +5,8 @@ import { authorizeUser } from '../utils/authorize-user.mjs';
 const client = new DynamoDBClient({});
 const ddbDocClient = DynamoDBDocumentClient.from(client);
 
-// GET /entries?page=0&size=10 -> Returns paginated entries for authorized user sorted by date desc
+// GET /entries?page=0&size=10&before=YYYY-MM-DD&after=YYYY-MM-DD
+// Returns paginated entries for authorized user sorted by date desc with optional date range filters
 export const getEntriesHandler = async (event) => {
   const tableName = process.env.DIARY_TABLE;
 
@@ -29,17 +30,34 @@ export const getEntriesHandler = async (event) => {
   if (isNaN(size) || size <= 0) size = 10;
   if (size > 100) size = 100; // basic safety cap
 
-  const params = {
-    TableName: tableName,
-    FilterExpression: '#u = :u',
-    ExpressionAttributeNames: { '#u': 'userId' },
-    ExpressionAttributeValues: { ':u': userId }
-  };
+  // Optional date filters
+  const dateRe = /^\d{4}-\d{2}-\d{2}$/;
+  let before = typeof qs.before === 'string' && dateRe.test(qs.before) ? qs.before : undefined;
+  let after = typeof qs.after === 'string' && dateRe.test(qs.after) ? qs.after : undefined;
+  // If both present and inverted, swap to be forgiving
+  if (before && after && after > before) { const tmp = before; before = after; after = tmp; }
+
+  // Build Scan filter
+  let FilterExpression = '#u = :u';
+  const ExpressionAttributeNames = { '#u': 'userId' };
+  const ExpressionAttributeValues = { ':u': userId };
+  if (before) {
+    FilterExpression += ' AND #d <= :before';
+    ExpressionAttributeNames['#d'] = 'date';
+    ExpressionAttributeValues[':before'] = before;
+  }
+  if (after) {
+    FilterExpression += ' AND #d >= :after';
+    ExpressionAttributeNames['#d'] = 'date';
+    ExpressionAttributeValues[':after'] = after;
+  }
+
+  const params = { TableName: tableName, FilterExpression, ExpressionAttributeNames, ExpressionAttributeValues };
 
   try {
     const data = await ddbDocClient.send(new ScanCommand(params));
     const all = (data.Items || [])
-      .filter(it => it.date)
+      .filter(it => it.date && (!after || it.date >= after) && (!before || it.date <= before))
       .sort((a, b) => b.date.localeCompare(a.date)); // future to past
 
     const total = all.length;

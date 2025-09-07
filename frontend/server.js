@@ -93,9 +93,12 @@ app.get('/entry/:id', checkAuth, async (req, res) => {
 // Proxy API routes to backend adding Authorization header if available
 app.get('/api/entries', async (req, res) => {
         if (!req.isAuthenticated) return res.status(401).json({ message: 'Unauthorized' });
-        const { page = 0, size = 10 } = req.query;
+        const { page = 0, size = 10, before, after } = req.query;
         try {
-                const url = `${process.env.BACKEND_API_URL}entries?page=${encodeURIComponent(page)}&size=${encodeURIComponent(size)}`;
+                const qs = new URLSearchParams({ page: String(page), size: String(size) });
+                if (before) qs.set('before', String(before));
+                if (after) qs.set('after', String(after));
+                const url = `${process.env.BACKEND_API_URL}entries?${qs.toString()}`;
                 const r = await fetch(url, { headers: req.authHeaders });
                 const data = await r.json().catch(() => ({}));
                 res.status(r.status).json(data);

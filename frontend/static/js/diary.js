@@ -7,6 +7,8 @@ import { Uploader, UploadUI } from './uploader.js';
   const size = 10;            // page size
   let loading = false;        // loading flag
   let done = false;           // no more pages
+  let filterBefore = '';
+  let filterAfter = '';
 
   const root = document.getElementById('diary-root');
   if (!root) return;
@@ -37,7 +39,10 @@ import { Uploader, UploadUI } from './uploader.js';
     loading = true;
     loadingEl.classList.remove('d-none');
     try {
-      const res = await fetch(`/api/entries?page=${page}&size=${size}`);
+      const qs = new URLSearchParams({ page: String(page), size: String(size) });
+      if (filterBefore) qs.set('before', filterBefore);
+      if (filterAfter) qs.set('after', filterAfter);
+      const res = await fetch(`/api/entries?${qs.toString()}`);
       if (!res.ok) throw new Error('Failed to load entries');
       const data = await res.json();
       const items = data.entries || [];
@@ -243,6 +248,23 @@ import { Uploader, UploadUI } from './uploader.js';
       modal = new bootstrap.Modal(document.getElementById('newEntryModal'));
     }
     fetchEntries();
+    // Wire filters
+    const afterEl = document.getElementById('filterAfter');
+    const beforeEl = document.getElementById('filterBefore');
+    const applyBtn = document.getElementById('applyFilters');
+    const clearAfter = document.getElementById('clearAfter');
+    const clearBefore = document.getElementById('clearBefore');
+    applyBtn?.addEventListener('click', () => {
+      filterAfter = afterEl?.value || '';
+      filterBefore = beforeEl?.value || '';
+      // Reset list and reload from page 0
+      entriesEl.innerHTML = '';
+      Object.keys(dateGroups).forEach(k => delete dateGroups[k]);
+      page = 0; done = false; endEl.classList.add('d-none');
+      fetchEntries();
+    });
+    clearAfter?.addEventListener('click', () => { if (afterEl) afterEl.value = ''; filterAfter = ''; });
+    clearBefore?.addEventListener('click', () => { if (beforeEl) beforeEl.value = ''; filterBefore = ''; });
   });
 
   if (newEntryBtn) newEntryBtn.addEventListener('click', () => modal && modal.show());

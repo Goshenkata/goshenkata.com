@@ -43,6 +43,23 @@
     <div class="d-flex align-items-center mb-3">
       <h1 class="me-3 mb-0"><b>Diary</b></h1>
     </div>
+    <div class="filter-bar bg-dark border border-secondary rounded-3 p-3 mb-3">
+      <div class="row g-2 align-items-end">
+        <div class="col-12 col-md-3">
+          <label class="form-label small text-secondary" for="filterAfter">After (from)</label>
+          <input type="date" id="filterAfter" class="form-control bg-dark text-light border-secondary" />
+        </div>
+        <div class="col-12 col-md-3">
+          <label class="form-label small text-secondary" for="filterBefore">Before (to)</label>
+          <input type="date" id="filterBefore" class="form-control bg-dark text-light border-secondary" />
+        </div>
+        <div class="col-12 col-md-6 d-flex gap-2">
+          <button id="applyFilters" class="btn btn-primary">Apply</button>
+          <button id="clearAfter" class="btn btn-outline-light">Clear After</button>
+          <button id="clearBefore" class="btn btn-outline-light">Clear Before</button>
+        </div>
+      </div>
+    </div>
     <div id="entries" class="row g-3"></div>
     <div id="loading" class="text-center py-4 d-none">Loading...</div>
     <div id="endOfList" class="text-center py-4 d-none text-secondary">No more entries.</div>
