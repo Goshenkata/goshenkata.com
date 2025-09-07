@@ -100,6 +100,20 @@ app.post('/api/entry', async (req, res) => {
         }
 });
 
+// Delete an entry and its attachments
+app.delete('/api/entry/:id', async (req, res) => {
+        if (!req.isAuthenticated) return res.status(401).json({ message: 'Unauthorized' });
+        try {
+                const url = `${process.env.BACKEND_API_URL}entry/${encodeURIComponent(req.params.id)}`;
+                const r = await fetch(url, { method: 'DELETE', headers: { ...req.authHeaders } });
+                const data = await r.json().catch(() => ({}));
+                res.status(r.status).json(data);
+        } catch (e) {
+                console.error(e);
+                res.status(500).json({ message: 'Error deleting entry' });
+        }
+});
+
 // Proxy to generate presigned upload URL
 app.post('/api/upload-url', async (req, res) => {
         if (!req.isAuthenticated) return res.status(401).json({ message: 'Unauthorized' });
@@ -111,6 +125,20 @@ app.post('/api/upload-url', async (req, res) => {
         } catch (e) {
                 console.error(e);
                 res.status(500).json({ message: 'Error generating upload URL' });
+        }
+});
+
+// Proxy to generate presigned access URL (GET) for S3 object via POST body { key }
+app.post('/api/access-url', async (req, res) => {
+        if (!req.isAuthenticated) return res.status(401).json({ message: 'Unauthorized' });
+        try {
+                const url = `${process.env.BACKEND_API_URL}access-url`;
+                const r = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json', ...req.authHeaders }, body: JSON.stringify(req.body) });
+                const data = await r.json().catch(() => ({}));
+                res.status(r.status).json(data);
+        } catch (e) {
+                console.error(e);
+                res.status(500).json({ message: 'Error generating access URL' });
         }
 });
 

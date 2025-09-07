@@ -1,5 +1,5 @@
 /** Diary page client logic with date-grouped rendering and uploads */
-import { createEntry } from './api.js';
+import { createEntry, getAccessUrl, deleteEntry } from './api.js';
 import { Uploader, UploadUI } from './uploader.js';
 
 (function () {
@@ -62,7 +62,79 @@ import { Uploader, UploadUI } from './uploader.js';
     const group = getDateGroup(date);
     const col = document.createElement('div');
     const text = entry.text || entry.Text || '';
-    col.innerHTML = `\n      <div class="entry-card">\n        <pre>${escapeHtml(text)}</pre>\n      </div>`;
+      const images = entry.images || entry.Images || [];
+      const entryId = entry.entryId || entry.id || Math.random().toString(36).slice(2);
+      const gridId = `thumbs-${entryId}`;
+      col.innerHTML = `
+        <div class="entry-card" data-entry-id="${entryId}">
+          <div class="d-flex justify-content-end mb-2">
+            <button class="btn btn-sm btn-outline-danger" data-role="delete-entry" title="Delete entry">✖</button>
+          </div>
+          <pre class="mb-2">${escapeHtml(text)}</pre>
+          ${images.length ? `<button class="btn btn-sm btn-outline-light" data-toggle="thumbs" data-target="${gridId}">Show images (${images.length})</button>` : ''}
+          <div id="${gridId}" class="thumb-grid mt-2 d-none"></div>
+        </div>`;
+      // Hook delete button
+      const delBtn = col.querySelector('[data-role="delete-entry"]');
+      if (delBtn && entryId) {
+        delBtn.addEventListener('click', async (e) => {
+          e.preventDefault();
+          const ok = window.confirm('Delete this entry? Attached files will also be removed.');
+          if (!ok) return;
+          delBtn.disabled = true;
+          try {
+            await deleteEntry(entryId);
+            // Remove from DOM and update counts
+            if (col.parentElement) {
+              group.list.removeChild(col);
+              group.count = Math.max(0, group.count - 1);
+              group.countEl.textContent = group.count;
+              // If group empty, remove wrapper
+              if (group.count === 0 && group.wrapper?.parentElement) {
+                group.wrapper.parentElement.removeChild(group.wrapper);
+                delete dateGroups[date];
+              }
+            }
+            window.__toast && window.__toast('Entry deleted', { title: 'Diary', variant: 'success' });
+          } catch (err) {
+            console.error(err);
+            window.__toast && window.__toast('Failed to delete entry', { title: 'Diary', variant: 'danger' });
+            delBtn.disabled = false;
+          }
+        });
+      }
+      if (images.length) {
+        const btn = col.querySelector('[data-toggle="thumbs"]');
+        const grid = col.querySelector(`#${CSS.escape(gridId)}`);
+        btn.addEventListener('click', async () => {
+          const isHidden = grid.classList.contains('d-none');
+          if (isHidden && !grid.dataset.loaded) {
+            try {
+              const urls = await Promise.all(images.map(async (key) => {
+                const { url } = await getAccessUrl(key);
+                return { key, url };
+              }));
+              grid.innerHTML = '';
+              for (const { key, url } of urls) {
+                const card = document.createElement('div');
+                card.className = 'thumb-card';
+                const img = document.createElement('img');
+                img.className = 'thumb-img';
+                img.src = url;
+                img.alt = key;
+                card.appendChild(img);
+                grid.appendChild(card);
+              }
+              grid.dataset.loaded = '1';
+            } catch (err) {
+              console.error(err);
+              window.__toast && window.__toast('Failed to load images', { title: 'Entry', variant: 'danger' });
+            }
+          }
+          grid.classList.toggle('d-none');
+          btn.textContent = grid.classList.contains('d-none') ? `Show images (${images.length})` : 'Hide images';
+        });
+      }
     group.list.appendChild(col);
     group.count += 1;
     group.countEl.textContent = group.count;

@@ -33,3 +33,21 @@ export async function putToS3(url, file, headers = {}) {
     console.log(`[API] S3 upload succeeded for ${file.name}`);
     return res;
 }
+
+export async function getAccessUrl(key) {
+    const res = await fetch('/api/access-url', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ key })
+    });
+    if (!res.ok) throw new Error(`Access URL failed (${res.status})`);
+    return res.json();
+}
+
+export async function deleteEntry(id) {
+    const res = await fetch(`/api/entry/${encodeURIComponent(id)}`, {
+        method: 'DELETE'
+    });
+    if (!res.ok) throw new Error(`Delete entry failed (${res.status})`);
+    return res.json();
+}
