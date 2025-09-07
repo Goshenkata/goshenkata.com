@@ -66,7 +66,7 @@ import { Uploader, UploadUI } from './uploader.js';
       const entryId = entry.entryId || entry.id || Math.random().toString(36).slice(2);
       const gridId = `thumbs-${entryId}`;
       col.innerHTML = `
-        <div class="entry-card" data-entry-id="${entryId}">
+        <div class="entry-card" data-entry-id="${entryId}" style="cursor:pointer">
           <div class="d-flex justify-content-end mb-2">
             <button class="btn btn-sm btn-outline-danger" data-role="delete-entry" title="Delete entry">✖</button>
           </div>
@@ -74,6 +74,13 @@ import { Uploader, UploadUI } from './uploader.js';
           ${images.length ? `<button class="btn btn-sm btn-outline-light" data-toggle="thumbs" data-target="${gridId}">Show images (${images.length})</button>` : ''}
           <div id="${gridId}" class="thumb-grid mt-2 d-none"></div>
         </div>`;
+      // Card click -> navigate to entry page (ignore clicks on internal buttons)
+      const card = col.querySelector('.entry-card');
+      card.addEventListener('click', (e) => {
+        const t = e.target;
+        if (t.closest('button')) return; // let buttons handle their own clicks
+        window.location.href = `/entry/${encodeURIComponent(entryId)}`;
+      });
       // Hook delete button
       const delBtn = col.querySelector('[data-role="delete-entry"]');
       if (delBtn && entryId) {

@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <%- include('partials/head', { pageTitle: 'Entry - Goshenkata' }) %>
+  <style>
+    :root { --dk-bg:#0f0f0f; --dk-panel:#1b1b1c; --dk-panel-alt:#212123; --dk-border:#303031; }
+    body { font-family: system-ui, "Segoe UI", Roboto, Ubuntu, Cantarell, "Noto Sans", sans-serif; }
+    .container-narrow { max-width: 860px; }
+    .entry-wrap { background:var(--dk-panel); border:1px solid var(--dk-border); border-radius:14px; padding:1.2rem 1.25rem; }
+    pre { white-space:pre-wrap; word-break:break-word; font-size:1rem; font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace; background:transparent; margin:0; }
+    .thumb-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(160px,1fr)); gap:.75rem; }
+    .thumb-card { position:relative; background:#0f0f10; border:1px solid #2a2a2e; border-radius:8px; overflow:hidden; }
+    .thumb-img, .thumb-video { width:100%; height:180px; object-fit:cover; display:block; background:#111; }
+  </style>
+</head>
+<body class="bg-dark text-light">
+  <%- include('partials/navbar') %>
+  <div class="container container-narrow py-4" id="entry-root" data-entry='<%- JSON.stringify(entry || null) %>'>
+    <a href="/diary" class="text-decoration-none text-secondary small">← Back to Diary</a>
+    <h1 class="h3 mt-2 mb-3">Entry</h1>
+    <% if (!entry) { %>
+      <div class="alert alert-danger">Entry not found.</div>
+    <% } else { %>
+      <div class="entry-wrap mb-4">
+        <div class="text-secondary small mb-2">Date: <%= entry.date %></div>
+        <pre><%= entry.text %></pre>
+      </div>
+      <div id="media" class="mb-5">
+        <!-- media rendered by client script -->
+      </div>
+    <% } %>
+  </div>
+  <script type="module" src="/js/entry.js"></script>
+</body>
+</html>

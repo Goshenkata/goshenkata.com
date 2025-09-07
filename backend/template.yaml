@@ -13,6 +13,29 @@ Globals:
         CognitoAuthorizer:
           UserPoolArn: arn:aws:cognito-idp:eu-central-1:207567768006:userpool/eu-central-1_VG1OzzrL0
 Resources:
+  getEntryByIdFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: src/handlers/get-entry-by-id.getEntryByIdHandler
+      Runtime: nodejs22.x
+      Architectures:
+        - x86_64
+      MemorySize: 128
+      Timeout: 60
+      Description: Get a single diary entry by id for the authorized user
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref DiaryTable
+      Environment:
+        Variables:
+          DIARY_TABLE: !Ref DiaryTable
+          ALLOWED_USER_EMAIL: goshenkataklev@gmail.com
+      Events:
+        Api:
+          Type: Api
+          Properties:
+            Path: /entries/{id}
+            Method: GET
   deleteEntryFunction:
     Type: AWS::Serverless::Function
     Properties:

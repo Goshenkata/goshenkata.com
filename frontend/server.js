@@ -72,6 +72,24 @@ app.get('/diary', checkAuth, (req, res) => {
         res.render('diary', { isAuthenticated: true, backendApiUrl: process.env.BACKEND_API_URL || '' });
 });
 
+// Entry detail page
+app.get('/entry/:id', checkAuth, async (req, res) => {
+        if (!req.isAuthenticated) return res.redirect('/');
+        try {
+                const url = `${process.env.BACKEND_API_URL}entries/${encodeURIComponent(req.params.id)}`;
+                const r = await fetch(url, { headers: { ...req.authHeaders } });
+                const data = await r.json().catch(() => ({}));
+                if (!r.ok) {
+                        return res.status(r.status).render('error', { message: data?.message || 'Failed to load entry', isAuthenticated: true });
+                }
+                const entry = data.entry || null;
+                res.render('entry', { isAuthenticated: true, entry });
+        } catch (e) {
+                console.error(e);
+                res.status(500).send('Error loading entry');
+        }
+});
+
 // Proxy API routes to backend adding Authorization header if available
 app.get('/api/entries', async (req, res) => {
         if (!req.isAuthenticated) return res.status(401).json({ message: 'Unauthorized' });
@@ -111,6 +129,20 @@ app.delete('/api/entry/:id', async (req, res) => {
         } catch (e) {
                 console.error(e);
                 res.status(500).json({ message: 'Error deleting entry' });
+        }
+});
+
+// Get a single entry by id
+app.get('/api/entry/:id', async (req, res) => {
+        if (!req.isAuthenticated) return res.status(401).json({ message: 'Unauthorized' });
+        try {
+                const url = `${process.env.BACKEND_API_URL}entries/${encodeURIComponent(req.params.id)}`;
+                const r = await fetch(url, { method: 'GET', headers: { ...req.authHeaders } });
+                const data = await r.json().catch(() => ({}));
+                res.status(r.status).json(data);
+        } catch (e) {
+                console.error(e);
+                res.status(500).json({ message: 'Error fetching entry' });
         }
 });
 
